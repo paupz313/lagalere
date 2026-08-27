@@ -1,0 +1,1272 @@
+<!--
+  LA GALÈRE — configuration
+  ==========================
+  1. Créez un projet Supabase, exécutez supabase/schema.sql dedans.
+  2. Récupérez "Project URL" et la clé publique "anon" (Project Settings > API).
+  3. Remplacez les deux constantes SUPABASE_URL / SUPABASE_ANON_KEY tout en bas
+     de ce fichier (dans le <script>, section CONFIGURATION).
+  Voir README.md à la racine du projet pour le guide complet.
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Galère</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  /* ---------- tokens ---------- */
+  :root{
+    --paper: #FAF8F1;
+    --paper-raised: #FFFFFF;
+    --grain: rgba(150,130,90,0.05);
+    --ink: #2B2620;
+    --ink-soft: #6B6255;
+    --ink-faint: #9A9282;
+    --stamp: #C0392B;
+    --stamp-soft: rgba(192,57,43,0.10);
+    --ochre: #C68A2E;
+    --ochre-text: #8C5F17;
+    --tape: #E4C08A;
+    --pen: #2F5FA3;
+    --line: #E7E0D0;
+    --line-strong: #D2C7AC;
+    --card-bg: #FFFFFF;
+    --focus: #2B6CB0;
+    --shadow: rgba(60,48,28,0.12);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper: #1C1814;
+      --paper-raised: #241F19;
+      --grain: rgba(230,190,120,0.035);
+      --ink: #F1E9DA;
+      --ink-soft: #C9BCA4;
+      --ink-faint: #8F8570;
+      --stamp: #E2725B;
+      --stamp-soft: rgba(226,114,91,0.16);
+      --ochre: #E0AE5C;
+      --ochre-text: #E0AE5C;
+      --tape: #6B5B3C;
+      --pen: #8FB4E0;
+      --line: #3A332A;
+      --line-strong: #4E4534;
+      --card-bg: #241F19;
+      --focus: #7FB3E8;
+      --shadow: rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper: #1C1814;
+    --paper-raised: #241F19;
+    --grain: rgba(230,190,120,0.035);
+    --ink: #F1E9DA;
+    --ink-soft: #C9BCA4;
+    --ink-faint: #8F8570;
+    --stamp: #E2725B;
+    --stamp-soft: rgba(226,114,91,0.16);
+    --ochre: #E0AE5C;
+    --ochre-text: #E0AE5C;
+    --tape: #6B5B3C;
+    --pen: #8FB4E0;
+    --line: #3A332A;
+    --line-strong: #4E4534;
+    --card-bg: #241F19;
+    --focus: #7FB3E8;
+    --shadow: rgba(0,0,0,0.5);
+  }
+
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 20% 8%, var(--grain) 0, transparent 45%),
+      radial-gradient(circle at 82% 60%, var(--grain) 0, transparent 40%),
+      var(--paper);
+    color:var(--ink);
+    font-family:'Work Sans', ui-sans-serif, system-ui, sans-serif;
+    font-size:16px;
+    line-height:1.55;
+  }
+  .handwritten{
+    font-family:'Caveat', 'Segoe Script', cursive;
+    color:var(--pen);
+    font-weight:600;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+  h1,h2,h3{
+    font-family:'Fraunces', Georgia, serif;
+    text-wrap:balance;
+    margin:0;
+    color:var(--ink);
+  }
+  a{color:inherit;}
+  .mono{
+    font-family:'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--stamp);
+    font-weight:600;
+  }
+  button{font-family:inherit;}
+  :focus-visible{outline:2px solid var(--focus); outline-offset:2px;}
+
+  .wrap{max-width:760px; margin:0 auto; padding:0 24px;}
+
+  /* ---------- header ---------- */
+  header.site{
+    border-bottom:1px solid var(--line);
+    padding:18px 0;
+    position:sticky; top:0; z-index:20;
+    background:var(--paper);
+    backdrop-filter: blur(2px);
+  }
+  header.site .wrap{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+  }
+  .wordmark{
+    display:flex; align-items:baseline; gap:10px;
+  }
+  .wordmark .name{
+    font-family:'Fraunces', serif;
+    font-weight:900;
+    font-size:1.35rem;
+    letter-spacing:-0.01em;
+  }
+  .wordmark .tick{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    color:var(--ink-faint);
+    border:1px solid var(--line-strong);
+    border-radius:3px;
+    padding:2px 6px;
+  }
+  .header-actions{display:flex; align-items:center; gap:12px;}
+  .auth-area{display:flex; align-items:center; gap:10px;}
+  .auth-email{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    color:var(--ink-soft);
+    max-width:16ch;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .btn{
+    font-weight:600;
+    font-size:0.92rem;
+    border:1px solid var(--ink);
+    background:var(--ink);
+    color:var(--paper-raised);
+    padding:10px 16px;
+    border-radius:2px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .btn:hover{background:var(--stamp); border-color:var(--stamp);}
+  .btn.ghost{
+    background:transparent;
+    color:var(--ink);
+    border:1px solid var(--line-strong);
+  }
+  .btn.ghost:hover{border-color:var(--stamp); color:var(--stamp); background:transparent;}
+  .btn[disabled]{opacity:0.6; cursor:default;}
+
+  /* ---------- paper panel & vintage details ---------- */
+  .paper-panel{
+    background:var(--card-bg);
+    border:1px solid var(--line);
+    border-radius:2px;
+    box-shadow:0 3px 12px var(--shadow);
+    position:relative;
+  }
+  .dog-ear::after{
+    content:"";
+    position:absolute; top:0; right:0;
+    width:0; height:0;
+    border-style:solid;
+    border-width:0 20px 20px 0;
+    border-color:transparent var(--paper) transparent transparent;
+    filter:drop-shadow(-1px 1px 1px var(--shadow));
+  }
+  .paperclip{
+    position:absolute;
+    top:-15px; left:28px;
+    color:var(--line-strong);
+    transform:rotate(-16deg);
+    filter:drop-shadow(0 2px 2px var(--shadow));
+    z-index:3;
+  }
+  .postit{
+    display:inline-block;
+    background:var(--tape);
+    color:var(--ink);
+    font-family:'Caveat', cursive;
+    font-weight:600;
+    font-size:1.1rem;
+    line-height:1.3;
+    padding:8px 14px 10px;
+    border-radius:1px;
+    box-shadow:0 3px 8px var(--shadow);
+    transform:rotate(-3deg);
+    margin:0 0 16px;
+  }
+  .coffee-ring{
+    position:absolute;
+    width:130px; height:130px;
+    border-radius:50%;
+    border:9px solid rgba(120,72,32,0.10);
+    right:-18px; bottom:-26px;
+    pointer-events:none;
+  }
+
+  /* ---------- hero ---------- */
+  .hero{
+    padding:40px 32px 34px;
+    margin:26px 0 30px;
+    transform:rotate(-0.35deg);
+  }
+  .hero-top{
+    display:flex; align-items:flex-start; justify-content:space-between; gap:28px; flex-wrap:wrap;
+  }
+  .hero h1{
+    font-size:clamp(2.1rem, 5vw, 3.1rem);
+    font-weight:700;
+    line-height:1.08;
+    max-width:14ch;
+  }
+  .hero h1 em{
+    font-style:italic;
+    color:var(--stamp);
+  }
+  .hero p.lede{
+    margin-top:18px;
+    max-width:58ch;
+    font-size:1.06rem;
+    color:var(--ink-soft);
+  }
+  .stamp{
+    flex:none;
+    width:118px; height:118px;
+    border-radius:48% 52% 51% 49% / 53% 47% 53% 47%;
+    border:2.5px solid var(--stamp);
+    box-shadow: inset 0 0 0 4px var(--card-bg), inset 0 0 0 5px var(--stamp);
+    display:flex; align-items:center; justify-content:center;
+    transform:rotate(-11deg);
+    color:var(--stamp);
+    text-align:center;
+    padding:10px;
+  }
+  .stamp span{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:0.62rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    line-height:1.4;
+  }
+  .stamp span.big{font-size:0.86rem; font-weight:700; margin:2px 0;}
+
+  .hero-actions{
+    margin-top:30px;
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  }
+  .ticket-btn{
+    position:relative;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:0.95rem;
+    letter-spacing:0.01em;
+    background:var(--card-bg);
+    color:var(--ink);
+    border:1.5px dashed var(--line-strong);
+    border-radius:3px;
+    padding:12px 20px;
+    cursor:pointer;
+  }
+  .ticket-btn:hover{border-color:var(--stamp); color:var(--stamp);}
+  .ticket-btn .num{color:var(--ink-faint); font-size:0.8rem; margin-left:8px;}
+
+  .queue-note{
+    font-family:'Caveat', cursive;
+    font-weight:600;
+    font-size:1.2rem;
+    color:var(--pen);
+    display:inline-block;
+    transform:rotate(-2deg);
+  }
+
+  /* ---------- stats ---------- */
+  .stats{
+    padding:24px 28px;
+    margin:0 0 30px;
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:18px;
+    transform:rotate(0.25deg);
+  }
+  .stat b{
+    display:block;
+    font-family:'Fraunces', serif;
+    font-size:1.7rem;
+    font-weight:700;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat span{
+    font-size:0.78rem;
+    color:var(--ink-soft);
+  }
+
+  /* ---------- toolbar ---------- */
+  .toolbar{
+    padding:26px 0 14px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  }
+  .tabs{display:flex; gap:6px;}
+  .tab{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    padding:8px 12px;
+    border-radius:2px;
+    cursor:pointer;
+  }
+  .tab[aria-pressed="true"]{
+    background:var(--ink);
+    color:var(--paper-raised);
+    border-color:var(--ink);
+  }
+  select.filter{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    background:var(--card-bg);
+    color:var(--ink);
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:8px 10px;
+  }
+
+  /* ---------- feed ---------- */
+  .feed{padding:8px 0 20px; display:flex; flex-direction:column; gap:16px;}
+  .card{
+    background:var(--card-bg);
+    border:1px solid var(--line);
+    border-left:3px solid var(--stamp);
+    border-radius:2px;
+    padding:20px 22px;
+    box-shadow:0 2px 8px var(--shadow);
+    position:relative;
+  }
+  .card:nth-child(3n){ transform:rotate(-0.4deg); }
+  .card:nth-child(3n+1){ transform:rotate(0.3deg); }
+  .card:nth-child(3n+2){ transform:rotate(-0.15deg); }
+  .card-top{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    margin-bottom:10px;
+  }
+  .tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.68rem;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--ochre-text);
+    border:1px solid var(--ochre);
+    border-radius:2px;
+    padding:3px 8px;
+  }
+  .dossier-no{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.7rem;
+    color:var(--ink-faint);
+    text-shadow:0.5px 0 rgba(192,57,43,0.35), -0.5px 0 rgba(47,95,163,0.3);
+  }
+  .card h3{
+    font-size:1.24rem;
+    font-weight:600;
+    line-height:1.28;
+    margin-bottom:8px;
+  }
+  .card p.body{
+    color:var(--ink-soft);
+    font-size:0.98rem;
+    margin:0 0 14px;
+  }
+  .card-bottom{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    border-top:1px dashed var(--line);
+    padding-top:12px;
+  }
+  .byline{
+    font-size:0.82rem;
+    color:var(--ink-faint);
+  }
+  .vote-btn{
+    display:flex; align-items:center; gap:8px;
+    background:transparent;
+    border:1px solid var(--line-strong);
+    color:var(--ink);
+    font-weight:600;
+    font-size:0.85rem;
+    padding:8px 12px;
+    border-radius:2px;
+    cursor:pointer;
+  }
+  .vote-btn:hover{border-color:var(--stamp); color:var(--stamp);}
+  .vote-btn .count{font-family:'IBM Plex Mono', monospace; font-variant-numeric:tabular-nums;}
+  .vote-btn.voted{
+    background:var(--stamp-soft);
+    border-color:var(--stamp);
+    color:var(--stamp);
+    cursor:default;
+  }
+  .empty{
+    text-align:center;
+    color:var(--ink-faint);
+    padding:40px 0;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.85rem;
+  }
+
+  /* ---------- about ---------- */
+  .about{
+    padding:38px 32px;
+    margin:0 0 30px;
+    transform:rotate(-0.2deg);
+  }
+  .about h2{font-size:1.5rem; font-weight:600; margin-bottom:14px;}
+  .about p{color:var(--ink-soft); max-width:62ch; margin:0 0 12px; position:relative;}
+
+  footer{
+    padding:22px 4px 40px;
+  }
+  footer p{
+    font-size:0.78rem;
+    color:var(--ink-faint);
+    max-width:60ch;
+    margin:0;
+  }
+
+  /* ---------- modal ---------- */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(20,24,32,0.55);
+    display:none;
+    align-items:flex-start;
+    justify-content:center;
+    padding:40px 20px;
+    overflow-y:auto;
+    z-index:100;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:var(--card-bg);
+    border:1px solid var(--line-strong);
+    border-radius:3px;
+    max-width:520px;
+    width:100%;
+    padding:26px 26px 22px;
+    box-shadow:0 10px 40px var(--shadow);
+  }
+  .modal-top{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:4px;
+  }
+  .modal h2{font-size:1.3rem; font-weight:600;}
+  .modal .eyebrow{display:block; margin-bottom:6px;}
+  .close-x{
+    background:none; border:none; color:var(--ink-faint);
+    font-size:1.3rem; line-height:1; cursor:pointer; padding:4px;
+  }
+  .close-x:hover{color:var(--stamp);}
+  form.dossier{margin-top:16px; display:flex; flex-direction:column; gap:14px;}
+  .field label{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .field input, .field select, .field textarea{
+    width:100%;
+    font-family:'Work Sans', sans-serif;
+    font-size:0.95rem;
+    color:var(--ink);
+    background:var(--paper-raised);
+    border:1px solid var(--line-strong);
+    border-radius:2px;
+    padding:10px 12px;
+  }
+  .field textarea{min-height:110px; resize:vertical; font-family:inherit;}
+  .field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--focus); outline-offset:1px;}
+  .modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:4px;}
+  .hint{font-size:0.76rem; color:var(--ink-faint); margin-top:-6px;}
+  .hint.error{color:var(--stamp); font-weight:600;}
+
+  /* ---------- theme suggestion ---------- */
+  .suggest-box{
+    background:var(--stamp-soft);
+    border:1px dashed var(--stamp);
+    border-radius:2px;
+    padding:12px 14px;
+    margin-top:-2px;
+  }
+  .suggest-box p{margin:2px 0 10px; font-size:0.92rem;}
+  .suggest-box p strong{color:var(--stamp);}
+  .suggest-actions{display:flex; gap:8px; flex-wrap:wrap;}
+  .btn.small{
+    font-size:0.78rem;
+    padding:6px 11px;
+  }
+  .suggest-box .hint{margin-top:8px;}
+
+  /* honeypot: kept in the DOM and tabbable-looking to humans, off-screen so only bots that
+     auto-fill every field trip it */
+  .hp-field{
+    position:absolute;
+    left:-9999px;
+    top:auto;
+    width:1px;
+    height:1px;
+    overflow:hidden;
+  }
+
+  /* ---------- ink stamp animation ---------- */
+  @keyframes stampSlam{
+    0%{ transform:translate(-50%,-50%) scale(2.2) rotate(-20deg); opacity:0; }
+    50%{ transform:translate(-50%,-50%) scale(0.92) rotate(-7deg); opacity:1; }
+    68%{ transform:translate(-50%,-50%) scale(1.07) rotate(-10deg); opacity:1; }
+    82%{ transform:translate(-50%,-50%) scale(1) rotate(-9deg); opacity:1; }
+    100%{ transform:translate(-50%,-50%) scale(1) rotate(-9deg); opacity:0; }
+  }
+  .ink-stamp{
+    position:absolute;
+    left:50%; top:50%;
+    pointer-events:none;
+    border:3px solid var(--stamp);
+    color:var(--stamp);
+    background:var(--paper-raised);
+    border-radius:6px;
+    padding:8px 16px;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    font-size:1.05rem;
+    white-space:nowrap;
+    box-shadow: inset 0 0 0 2px var(--stamp);
+    animation: stampSlam 0.85s cubic-bezier(.22,1.6,.4,1) forwards;
+    z-index:5;
+  }
+
+  @media (max-width: 560px){
+    .stats{grid-template-columns:1fr 1fr;}
+    .stat:nth-child(3){grid-column:1 / -1;}
+    .hero-top{flex-direction:column-reverse;}
+    .stamp{align-self:flex-end;}
+  }
+
+  .config-notice{
+    background:var(--stamp-soft);
+    border-bottom:1px solid var(--stamp);
+    color:var(--stamp);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    text-align:center;
+    padding:8px 16px;
+  }
+  .load-error{
+    text-align:center;
+    color:var(--stamp);
+    padding:20px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.82rem;
+  }
+</style>
+
+<div class="config-notice" id="configNotice" hidden>
+  Mode démo local — Supabase n'est pas encore configuré (voir README.md). Les dossiers ci-dessous ne sont pas partagés entre visiteurs.
+</div>
+
+<header class="site">
+  <div class="wrap">
+    <div class="wordmark">
+      <span class="name">La Galère</span>
+      <span class="tick mono">GUICHET N°1</span>
+    </div>
+    <div class="header-actions">
+      <div class="auth-area" id="authArea"></div>
+      <button class="btn" id="openFormTop" type="button">Raconter ma galère</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero paper-panel dog-ear">
+    <div class="paperclip" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12.5V6.5a3.5 3.5 0 0 1 7 0v10a2 2 0 0 1-4 0v-9"/></svg>
+    </div>
+    <div class="hero-top">
+      <div>
+        <p class="eyebrow">Défouloir citoyen — pas un formulaire officiel</p>
+        <h1>Votre dossier n'avance pas.<br>Ici, au moins, il se <em>raconte</em>.</h1>
+        <p class="lede">La Galère recense, en toute liberté, les mésaventures des citoyens avec l'administration française. Pas d'algorithme qui classe, pas de ministère derrière : juste des gens qui écrivent, et d'autres qui tamponnent « vécu aussi ». Avant, ça finissait noyé dans un fil Reddit à minuit. Maintenant, ça a sa propre salle d'attente.</p>
+      </div>
+      <div class="stamp" aria-hidden="true">
+        <span>
+          <span class="big">DOSSIER</span>
+          REÇU &amp; CLASSÉ<br>SANS SUITE
+        </span>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="ticket-btn" id="openFormHero" type="button">Prendre un ticket <span class="num mono" id="ticketNum">— N° 000000</span></button>
+      <span class="queue-note">aucune attente, contrairement à la vraie préfecture</span>
+    </div>
+  </section>
+
+  <section class="stats paper-panel dog-ear" aria-label="Statistiques">
+    <div class="stat"><b class="mono" id="statCount">—</b><span>galères recensées</span></div>
+    <div class="stat"><b class="mono" id="statAdmins">—</b><span>administrations mises en cause</span></div>
+    <div class="stat"><b class="mono" id="statVotes">—</b><span>tampons de solidarité posés</span></div>
+  </section>
+
+  <section class="toolbar">
+    <div class="tabs" role="tablist" aria-label="Trier">
+      <button class="tab" id="sortVotes" role="tab" aria-pressed="true" type="button">Les plus tamponnées</button>
+      <button class="tab" id="sortRecent" role="tab" aria-pressed="false" type="button">Les plus récentes</button>
+    </div>
+    <select class="filter" id="filterCat" aria-label="Filtrer par administration">
+      <option value="">Toutes les administrations</option>
+    </select>
+  </section>
+
+  <section class="feed" id="feed" aria-live="polite">
+    <!-- injected -->
+  </section>
+
+  <section class="about paper-panel dog-ear">
+    <div class="coffee-ring" aria-hidden="true"></div>
+    <p class="eyebrow">Pourquoi ce site existe</p>
+    <div class="postit">Griffonné par des citoyens,<br>pas tamponné par un ministère.</div>
+    <h2>On commence simple, exprès.</h2>
+    <p>Il n'existait pas vraiment, en France, d'endroit pensé pour ça : drôle, communautaire, fait pour écrire plutôt que pour remplir un formulaire de plus. Alors on commence petit — un défouloir, des catégories posées à la main, un bouton pour dire « vécu aussi ». Rien d'automatique, rien qui vous profile.</p>
+    <p>Si ça prend racine, la suite pourra faire plus : croiser vos dossiers avec ce qui se discute à l'Assemblée, prévenir votre élu qu'un texte vous concerne. Pour l'instant, la seule question qui compte est plus simple : est-ce que vous avez envie de revenir raconter la prochaine ?</p>
+  </section>
+
+  <footer>
+    <p>La Galère est un projet citoyen indépendant, pensé et tenu par des particuliers. Il n'est affilié à aucune administration, ministère ou service public réel — toute ressemblance avec un vrai guichet est probablement voulue. Les tampons ne valent rien devant un tribunal.</p>
+  </footer>
+
+</main>
+
+<div class="overlay" id="overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-top">
+      <div>
+        <span class="eyebrow">Nouveau dossier</span>
+        <h2 id="modalTitle">Déposer votre galère</h2>
+      </div>
+      <button class="close-x" id="closeModal" type="button" aria-label="Fermer">&times;</button>
+    </div>
+    <form class="dossier" id="dossierForm">
+      <div class="field">
+        <label for="fTitle">Intitulé de votre galère</label>
+        <input id="fTitle" type="text" maxlength="90" required placeholder="Ex. : Un formulaire pour obtenir un formulaire">
+      </div>
+      <div class="field">
+        <label for="fBody">Racontez</label>
+        <textarea id="fBody" maxlength="600" required placeholder="Ce qui s'est passé, avec autant de détails absurdes que possible."></textarea>
+      </div>
+      <div class="suggest-box" id="suggestBox" hidden>
+        <span class="eyebrow">Thème suggéré</span>
+        <p>On pense qu'il s'agit de : <strong id="suggestCat"></strong></p>
+        <div class="suggest-actions">
+          <button type="button" class="btn small" id="suggestAccept">Oui, c'est ça</button>
+          <button type="button" class="btn ghost small" id="suggestReject">Non, je choisis</button>
+        </div>
+        <p class="hint">Suggestion basée sur des mots-clés dans votre texte, pas une vraie IA — vous pouvez toujours changer.</p>
+      </div>
+      <div class="field">
+        <label for="fCat">Administration concernée</label>
+        <select id="fCat" required></select>
+      </div>
+      <div class="field">
+        <label for="fName">Votre nom ou pseudo</label>
+        <input id="fName" type="text" maxlength="40" placeholder="Anonyme">
+        <p class="hint">Facultatif. Personne ne vous demandera de pièce justificative — pour une fois.</p>
+      </div>
+      <div class="field hp-field" aria-hidden="true">
+        <label for="fWebsite">Laissez ce champ vide</label>
+        <input id="fWebsite" name="fWebsite" type="text" tabindex="-1" autocomplete="off">
+      </div>
+      <p class="hint error" id="formError" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" id="cancelForm">Annuler</button>
+        <button type="submit" class="btn">Déposer le dossier</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="overlay" id="authOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+    <div class="modal-top">
+      <div>
+        <span class="eyebrow">Connexion</span>
+        <h2 id="authModalTitle">Recevoir un lien de connexion</h2>
+      </div>
+      <button class="close-x" id="closeAuthModal" type="button" aria-label="Fermer">&times;</button>
+    </div>
+    <form class="dossier" id="authForm">
+      <div class="field">
+        <label for="authEmail">Votre email</label>
+        <input id="authEmail" type="email" required placeholder="vous@exemple.fr">
+      </div>
+      <p class="hint">Pas de mot de passe : on vous envoie un lien, cliquez dessus pour vous connecter. Il faut un compte pour raconter une galère ou tamponner « vécu aussi ».</p>
+      <p class="hint error" id="authError" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" id="cancelAuth">Annuler</button>
+        <button type="submit" class="btn" id="authSubmit">Envoyer le lien</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ======================================================================
+     CONFIGURATION — remplacez ces deux valeurs par celles de votre projet
+     Supabase (Project Settings > API). La clé "anon" est faite pour être
+     publique : la vraie protection vient des règles RLS dans schema.sql,
+     pas du secret de cette clé.
+     ====================================================================== */
+  var SUPABASE_URL = "https://kvyfnwnrujwbxlyxuwop.supabase.co";
+  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2eWZud25ydWp3YnhseXh1d29wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4Mzk5ODcsImV4cCI6MjEwMzQxNTk4N30.goWCeVFbEfVAQSDE3hkAt-DJhiTb9FTlYUOu6dlZTes";
+  /* ====================================================================== */
+
+  var supabaseReady = SUPABASE_URL.indexOf("REPLACE_WITH") === -1 && SUPABASE_ANON_KEY.indexOf("REPLACE_WITH") === -1;
+  var sb = (supabaseReady && window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+  if (!supabaseReady){
+    var notice = document.getElementById("configNotice");
+    if (notice) notice.hidden = false;
+  }
+
+  var CATEGORIES = [
+    "Impôts & fiscalité",
+    "CAF & prestations",
+    "Préfecture & titres de séjour",
+    "Sécu / CPAM",
+    "Emploi / France Travail",
+    "Mairie & état civil",
+    "Transport & permis",
+    "Logement",
+    "Autre"
+  ];
+
+  /* Utilisés uniquement en mode démo (Supabase non configuré) — jamais
+     affichés une fois SUPABASE_URL/SUPABASE_ANON_KEY renseignés. Ce sont des
+     exemples fictifs écrits pendant le prototypage, pas de vrais témoignages. */
+  var SEED = [
+    {id:"s1", no:"N°26-041207", date:"2026-07-14", cat:"Transport & permis", title:"La carte grise que je n'ai jamais eue, sauf sur le PV", body:"J'ai vendu ma voiture en 2023. En 2026, l'ANTS m'envoie toujours les PV du nouveau propriétaire, plus deux relances pour « défaut de déclaration de cession » — que j'ai faite trois fois, avec accusé de réception à chaque fois. Le monsieur au téléphone m'a dit que le système « s'était peut-être un peu emmêlé ». Un peu.", author:"ExPropriétaireDeLA-812-XY", votes:412},
+    {id:"s2", no:"N°26-033981", date:"2026-06-02", cat:"Impôts & fiscalité", title:"Deux avis d'imposition, deux montants, un seul contribuable", body:"Reçu le même jour deux avis d'imposition différents, à 400€ d'écart, tous deux « définitifs ». Le service des impôts m'a confirmé que « normalement il n'y en a qu'un ». J'ai payé le plus gros par précaution. Toujours pas de réponse sur lequel était le vrai.", author:"PatateDuFisc", votes:378},
+    {id:"s3", no:"N°26-045102", date:"2026-08-01", cat:"Préfecture & titres de séjour", title:"RDV disponible uniquement le 1er du mois, à 3h12", body:"Le site ouvre un nouveau créneau chaque mois, toujours à une heure improbable, toujours saturé en quatre secondes. Je programme une alarme depuis huit mois. J'ai fini par payer un service tiers pour surveiller le site à ma place. Mon titre de séjour expire dans trois semaines.", author:"InsomniaqueMalgréMoi", votes:356},
+    {id:"s4", no:"N°26-029844", date:"2026-05-20", cat:"Sécu / CPAM", title:"Ma carte Vitale bloquée à cause de ma grand-mère, décédée en 2011", body:"Remboursement refusé, motif indiqué : « bénéficiaire décédé ». Sauf que le bénéficiaire, c'est moi, bien vivant. Après enquête, mon dossier avait fusionné avec celui de ma grand-mère parce qu'on partage un numéro de Sécu à un chiffre près. Ça fait six semaines que j'existe administrativement à moitié.", author:"VivantMaisPasSurPapier", votes:331},
+    {id:"s5", no:"N°26-021355", date:"2026-04-11", cat:"Emploi / France Travail", title:"France Travail réclame une attestation Pôle Emploi... de France Travail", body:"Pour mon dossier de formation, on me demande une « attestation Pôle Emploi ». Pôle Emploi n'existe plus depuis 2024, c'est devenu France Travail. Le formulaire, lui, n'a pas été mis à jour. Le conseiller m'a suggéré d'écrire « Pôle Emploi » quand même, « pour que le logiciel comprenne ».", author:"EntreDeuxNoms", votes:298},
+    {id:"s6", no:"N°26-014200", date:"2026-03-09", cat:"Mairie & état civil", title:"Pour un acte de naissance, il faut... un acte de naissance", body:"Ma mairie de naissance demande une pièce d'identité pour délivrer un acte de naissance. Ma seule pièce d'identité valide a expiré parce que son renouvellement demandait un acte de naissance récent. On tourne en rond depuis février.", author:"NéQuelquePartMaisPlusPourLongtemps", votes:267},
+    {id:"s7", no:"N°26-009873", date:"2026-02-18", cat:"Transport & permis", title:"Un point de permis retiré pour une voiture vendue depuis trois ans", body:"Flashé en 2026 par une voiture que j'ai vendue en 2023, à un acheteur qui n'a jamais fait le changement de carte grise. Résultat : moins un point, et impossible de contester sans le nom du nouveau propriétaire, que je n'ai pas le droit d'obtenir « pour des raisons de confidentialité ».", author:"ZéroPointZéroVoiture", votes:241},
+    {id:"s8", no:"N°26-004501", date:"2026-01-27", cat:"Logement", title:"APL coupées pour un déménagement pourtant déclaré deux fois", body:"J'ai déclaré mon déménagement le jour même, avec justificatifs, deux fois par sécurité — par courrier et sur l'espace en ligne. La CAF a suspendu mes APL trois mois « en attendant la mise à jour du dossier ». Le dossier, lui, affichait déjà la bonne adresse depuis le premier jour.", author:"DéménagéMaisPasCru", votes:203}
+  ];
+
+  var KEYWORDS = {
+    "Impôts & fiscalité": ["impot","impots","fiscal","fiscalite","tresor public","avis d imposition","declaration de revenus","tva","prelevement a la source","dgfip","contribuable"],
+    "CAF & prestations": ["caf","allocation","allocataire","prime d activite","rsa"],
+    "Préfecture & titres de séjour": ["prefecture","titre de sejour","carte de sejour","visa","naturalisation","recepisse","sous-prefecture","regularisation"],
+    "Sécu / CPAM": ["securite sociale","cpam","carte vitale","remboursement","assurance maladie","arret de travail","secu"],
+    "Emploi / France Travail": ["pole emploi","france travail","chomage","actualisation","conseiller emploi","allocation chomage"],
+    "Mairie & état civil": ["mairie","etat civil","acte de naissance","acte de mariage","acte de deces","passeport","carte d identite","cni","recensement"],
+    "Transport & permis": ["carte grise","ants","permis de conduire","point de permis","points de permis","radar","immatriculation","controle technique"],
+    "Logement": ["apl","logement","bailleur","loyer","locataire","hlm","charges locatives","bail"]
+  };
+
+  function normalizeText(s){
+    return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  }
+
+  function suggestCategory(text){
+    var norm = normalizeText(text);
+    var best = null, bestScore = 0;
+    Object.keys(KEYWORDS).forEach(function(cat){
+      var score = 0;
+      KEYWORDS[cat].forEach(function(kw){ if (norm.indexOf(kw) !== -1) score++; });
+      if (score > bestScore){ bestScore = score; best = cat; }
+    });
+    return bestScore > 0 ? best : null;
+  }
+
+  var LS_TICKET = "lagalere_v1_ticket";
+
+  function safeGet(key){
+    try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }
+    catch(e){ return null; }
+  }
+  function safeSet(key, val){
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){ /* ignore */ }
+  }
+
+  /* ---------- auth (magic link) ---------- */
+  var currentUser = null;
+  var authArea = document.getElementById("authArea");
+  var authOverlay = document.getElementById("authOverlay");
+  var authForm = document.getElementById("authForm");
+  var authEmail = document.getElementById("authEmail");
+  var authError = document.getElementById("authError");
+  var authSubmit = document.getElementById("authSubmit");
+  var authFormOriginalHtml = authForm.innerHTML;
+
+  function renderAuthArea(){
+    if (!authArea) return;
+    authArea.innerHTML = "";
+    if (currentUser){
+      var emailSpan = document.createElement("span");
+      emailSpan.className = "auth-email mono";
+      emailSpan.title = currentUser.email;
+      emailSpan.textContent = currentUser.email;
+      var signOutBtn = document.createElement("button");
+      signOutBtn.type = "button";
+      signOutBtn.className = "btn ghost";
+      signOutBtn.textContent = "Se déconnecter";
+      signOutBtn.addEventListener("click", function(){ sb.auth.signOut(); });
+      authArea.appendChild(emailSpan);
+      authArea.appendChild(signOutBtn);
+    } else {
+      var loginBtn = document.createElement("button");
+      loginBtn.type = "button";
+      loginBtn.className = "btn ghost";
+      loginBtn.textContent = "Se connecter";
+      loginBtn.addEventListener("click", openAuthModal);
+      authArea.appendChild(loginBtn);
+    }
+  }
+
+  function openAuthModal(){
+    authForm.innerHTML = authFormOriginalHtml;
+    authEmail = document.getElementById("authEmail");
+    authError = document.getElementById("authError");
+    authSubmit = document.getElementById("authSubmit");
+    authOverlay.classList.add("open");
+    authEmail.focus();
+  }
+  function closeAuthModal(){
+    authOverlay.classList.remove("open");
+  }
+  document.getElementById("closeAuthModal").addEventListener("click", closeAuthModal);
+  document.getElementById("cancelAuth").addEventListener("click", closeAuthModal);
+  authOverlay.addEventListener("click", function(e){ if (e.target === authOverlay) closeAuthModal(); });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape" && authOverlay.classList.contains("open")) closeAuthModal(); });
+
+  authForm.addEventListener("submit", async function(e){
+    e.preventDefault();
+    authError.hidden = true;
+    var email = authEmail.value.trim();
+    if (!email || !sb) return;
+    authSubmit.disabled = true;
+    try{
+      var res = await sb.auth.signInWithOtp({ email: email, options: { emailRedirectTo: window.location.href } });
+      if (res.error) throw res.error;
+      authForm.innerHTML = '<p class="hint">Lien envoyé à ' + escapeHtml(email) + '. Ouvrez-le depuis cet appareil pour vous connecter (pensez à vérifier vos spams).</p>';
+    } catch(err){
+      console.error("La Galère — échec de connexion :", err);
+      authError.textContent = "Impossible d'envoyer le lien. Vérifiez l'adresse et réessayez.";
+      authError.hidden = false;
+      authSubmit.disabled = false;
+    }
+  });
+
+  var dossiers = [];      /* current list rendered, from Supabase (or SEED in demo mode) */
+  var voted = {};          /* dossier id -> true, for the current voterId */
+  var loading = true;
+
+  var sortMode = "votes";
+  var filterCat = "";
+
+  var feedEl = document.getElementById("feed");
+  var statCount = document.getElementById("statCount");
+  var statAdmins = document.getElementById("statAdmins");
+  var statVotes = document.getElementById("statVotes");
+  var filterSel = document.getElementById("filterCat");
+  var sortVotesBtn = document.getElementById("sortVotes");
+  var sortRecentBtn = document.getElementById("sortRecent");
+
+  CATEGORIES.forEach(function(c){
+    var o = document.createElement("option");
+    o.value = c; o.textContent = c;
+    filterSel.appendChild(o);
+  });
+  var fCat = document.getElementById("fCat");
+  var fCatPlaceholder = document.createElement("option");
+  fCatPlaceholder.value = ""; fCatPlaceholder.textContent = "— à confirmer —";
+  fCatPlaceholder.disabled = true; fCatPlaceholder.selected = true;
+  fCat.appendChild(fCatPlaceholder);
+  CATEGORIES.forEach(function(c){
+    var o = document.createElement("option");
+    o.value = c; o.textContent = c;
+    fCat.appendChild(o);
+  });
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, function(m){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m];
+    });
+  }
+
+  function formatDate(iso){
+    var d = new Date(iso + "T00:00:00");
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString("fr-FR", {day:"numeric", month:"short", year:"numeric"});
+  }
+
+  function render(){
+    var list = dossiers.slice();
+    if (filterCat) list = list.filter(function(d){ return d.cat === filterCat; });
+    if (sortMode === "votes") list.sort(function(a,b){ return b.votes - a.votes; });
+    else list.sort(function(a,b){ return a.date < b.date ? 1 : -1; });
+
+    feedEl.innerHTML = "";
+    if (loading){
+      var loadingEl = document.createElement("div");
+      loadingEl.className = "empty";
+      loadingEl.textContent = "Chargement des dossiers…";
+      feedEl.appendChild(loadingEl);
+    } else if (list.length === 0){
+      var empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = "Aucun dossier dans cette catégorie pour l'instant. Le premier, c'est peut-être vous.";
+      feedEl.appendChild(empty);
+    } else {
+      list.forEach(function(d){
+        var card = document.createElement("article");
+        card.className = "card";
+        var isVoted = !!voted[d.id];
+        card.innerHTML =
+          '<div class="card-top">' +
+            '<span class="tag">' + escapeHtml(d.cat) + '</span>' +
+            '<span class="dossier-no mono">' + escapeHtml(d.no) + '</span>' +
+          '</div>' +
+          '<h3>' + escapeHtml(d.title) + '</h3>' +
+          '<p class="body">' + escapeHtml(d.body) + '</p>' +
+          '<div class="card-bottom">' +
+            '<span class="byline">' + escapeHtml(d.author || "Anonyme") + ' — ' + formatDate(d.date) + '</span>' +
+            '<button type="button" class="vote-btn' + (isVoted ? ' voted' : '') + '" data-id="' + d.id + '"' + (isVoted ? ' disabled' : '') + '>' +
+              (isVoted ? '✓ Tamponné' : 'Vécu aussi') + ' <span class="count mono">' + d.votes + '</span>' +
+            '</button>' +
+          '</div>';
+        feedEl.appendChild(card);
+      });
+    }
+
+    statCount.textContent = loading ? "—" : dossiers.length;
+    var admins = {};
+    dossiers.forEach(function(d){ admins[d.cat] = true; });
+    statAdmins.textContent = loading ? "—" : Object.keys(admins).length;
+    var totalVotes = dossiers.reduce(function(sum,d){ return sum + d.votes; }, 0);
+    statVotes.textContent = loading ? "—" : totalVotes.toLocaleString("fr-FR");
+  }
+
+  async function loadDossiers(){
+    if (!supabaseReady){
+      dossiers = SEED.slice();
+      loading = false;
+      render();
+      return;
+    }
+    loading = true;
+    render();
+    try{
+      var dossiersRes = await sb.from("dossiers").select("*").order("created_at", { ascending:false });
+      if (dossiersRes.error) throw dossiersRes.error;
+      var votesRes = await sb.from("dossier_votes").select("*");
+      if (votesRes.error) throw votesRes.error;
+
+      var votesMap = {};
+      (votesRes.data || []).forEach(function(v){ votesMap[v.dossier_id] = v.votes; });
+
+      voted = {};
+      if (currentUser){
+        var myVotesRes = await sb.from("votes").select("dossier_id").eq("voter_id", currentUser.id);
+        if (myVotesRes.error) throw myVotesRes.error;
+        (myVotesRes.data || []).forEach(function(v){ voted[v.dossier_id] = true; });
+      }
+
+      dossiers = (dossiersRes.data || []).map(function(d){
+        return {
+          id: d.id,
+          no: d.no,
+          date: (d.created_at || "").slice(0, 10),
+          cat: d.cat,
+          title: d.title,
+          body: d.body,
+          author: d.author,
+          votes: votesMap[d.id] || 0
+        };
+      });
+      loading = false;
+      render();
+    } catch(err){
+      console.error("La Galère — échec du chargement Supabase :", err);
+      loading = false;
+      feedEl.innerHTML = '<div class="load-error">Impossible de charger les dossiers. Vérifiez la configuration Supabase (SUPABASE_URL / SUPABASE_ANON_KEY) et les règles RLS dans schema.sql.</div>';
+      statCount.textContent = "—";
+      statAdmins.textContent = "—";
+      statVotes.textContent = "—";
+    }
+  }
+
+  var prefersReducedMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  function playStampAnimation(btn){
+    var card = btn.closest(".card");
+    if (card && !prefersReducedMotion){
+      var stamp = document.createElement("div");
+      stamp.className = "ink-stamp";
+      stamp.setAttribute("aria-hidden", "true");
+      stamp.textContent = "Vécu aussi ✓";
+      card.appendChild(stamp);
+      setTimeout(function(){ if (stamp.parentNode) stamp.parentNode.removeChild(stamp); }, 900);
+    }
+  }
+
+  feedEl.addEventListener("click", function(e){
+    var btn = e.target.closest(".vote-btn");
+    if (!btn || btn.disabled) return;
+    var id = btn.getAttribute("data-id");
+    var d = dossiers.find(function(x){ return x.id === id; });
+    if (!d) return;
+
+    if (supabaseReady && !currentUser){
+      openAuthModal();
+      return;
+    }
+
+    /* instant optimistic feedback */
+    btn.disabled = true;
+    btn.classList.add("voted");
+    d.votes += 1;
+    voted[id] = true;
+    btn.innerHTML = "✓ Tamponné <span class=\"count mono\">" + d.votes + "</span>";
+    playStampAnimation(btn);
+
+    if (!supabaseReady){
+      /* demo mode: local only, nothing to sync */
+      setTimeout(render, 750);
+      return;
+    }
+
+    sb.from("votes").insert({ dossier_id: id, voter_id: currentUser.id }).then(function(res){
+      if (res.error && res.error.code !== "23505" /* already voted, fine */){
+        console.error("La Galère — échec du vote :", res.error);
+      }
+      setTimeout(loadDossiers, 700);
+    });
+  });
+
+  sortVotesBtn.addEventListener("click", function(){
+    sortMode = "votes";
+    sortVotesBtn.setAttribute("aria-pressed", "true");
+    sortRecentBtn.setAttribute("aria-pressed", "false");
+    render();
+  });
+  sortRecentBtn.addEventListener("click", function(){
+    sortMode = "recent";
+    sortRecentBtn.setAttribute("aria-pressed", "true");
+    sortVotesBtn.setAttribute("aria-pressed", "false");
+    render();
+  });
+  filterSel.addEventListener("change", function(){
+    filterCat = filterSel.value;
+    render();
+  });
+
+  /* ---------- modal ---------- */
+  var overlay = document.getElementById("overlay");
+  var dossierForm = document.getElementById("dossierForm");
+  var fTitle = document.getElementById("fTitle");
+  var fBody = document.getElementById("fBody");
+  var fName = document.getElementById("fName");
+  var fWebsite = document.getElementById("fWebsite");
+  var formError = document.getElementById("formError");
+  var suggestBox = document.getElementById("suggestBox");
+  var suggestCatEl = document.getElementById("suggestCat");
+  var suggestTimer = null;
+  var suggestionResolved = false;
+  var modalOpenedAt = 0;
+
+  function hideError(){ formError.hidden = true; formError.textContent = ""; }
+  function showError(msg){ formError.textContent = msg; formError.hidden = false; }
+
+  function updateSuggestion(){
+    if (suggestionResolved || fCat.value !== ""){ suggestBox.hidden = true; return; }
+    if (fBody.value.trim().length < 12){ suggestBox.hidden = true; return; }
+    var cat = suggestCategory(fTitle.value + " " + fBody.value);
+    if (cat){
+      suggestCatEl.textContent = cat;
+      suggestBox.hidden = false;
+    } else {
+      suggestBox.hidden = true;
+    }
+  }
+  function scheduleSuggestion(){
+    clearTimeout(suggestTimer);
+    suggestTimer = setTimeout(updateSuggestion, 450);
+  }
+  fTitle.addEventListener("input", scheduleSuggestion);
+  fBody.addEventListener("input", scheduleSuggestion);
+  document.getElementById("suggestAccept").addEventListener("click", function(){
+    fCat.value = suggestCatEl.textContent;
+    suggestionResolved = true;
+    suggestBox.hidden = true;
+  });
+  document.getElementById("suggestReject").addEventListener("click", function(){
+    suggestionResolved = true;
+    suggestBox.hidden = true;
+    fCat.focus();
+  });
+  fCat.addEventListener("change", function(){
+    suggestionResolved = true;
+    suggestBox.hidden = true;
+  });
+
+  function openModal(){
+    if (supabaseReady && !currentUser){
+      openAuthModal();
+      return;
+    }
+    overlay.classList.add("open");
+    modalOpenedAt = Date.now();
+    fTitle.focus();
+  }
+  function closeModal(){
+    overlay.classList.remove("open");
+    dossierForm.reset();
+    fCat.value = "";
+    suggestionResolved = false;
+    suggestBox.hidden = true;
+    hideError();
+  }
+  document.getElementById("openFormTop").addEventListener("click", openModal);
+  document.getElementById("openFormHero").addEventListener("click", openModal);
+  document.getElementById("closeModal").addEventListener("click", closeModal);
+  document.getElementById("cancelForm").addEventListener("click", closeModal);
+  overlay.addEventListener("click", function(e){ if (e.target === overlay) closeModal(); });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape" && overlay.classList.contains("open")) closeModal(); });
+
+  dossierForm.addEventListener("submit", async function(e){
+    e.preventDefault();
+    hideError();
+
+    /* honeypot: a real visitor never fills this hidden field */
+    if (fWebsite.value.trim() !== ""){
+      closeModal();
+      return;
+    }
+    /* a genuine person needs at least a couple of seconds to write something */
+    if (Date.now() - modalOpenedAt < 1500){
+      showError("Formulaire envoyé trop vite — réessayez, en prenant le temps de raconter.");
+      return;
+    }
+
+    var title = fTitle.value.trim();
+    var cat = fCat.value;
+    var body = fBody.value.trim();
+    var name = fName.value.trim() || "Anonyme";
+    if (!title || !cat || !body){
+      showError("Merci de remplir l'intitulé, le récit et de confirmer un thème.");
+      return;
+    }
+
+    var no = "N°" + String(new Date().getFullYear()).slice(-2) + "-" + String(Math.floor(Math.random()*90000)+10000);
+    var submitBtn = dossierForm.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+
+    if (!supabaseReady){
+      /* demo mode: local only */
+      var id = "u" + Date.now();
+      dossiers.unshift({ id:id, no:no, date:new Date().toISOString().slice(0,10), cat:cat, title:title, body:body, author:name, votes:1 });
+      voted[id] = true;
+      submitBtn.disabled = false;
+      closeModal();
+      sortMode = "recent";
+      sortRecentBtn.setAttribute("aria-pressed", "true");
+      sortVotesBtn.setAttribute("aria-pressed", "false");
+      render();
+      return;
+    }
+
+    if (!currentUser){
+      submitBtn.disabled = false;
+      openAuthModal();
+      return;
+    }
+
+    try{
+      var res = await sb.from("dossiers").insert({ no:no, cat:cat, title:title, body:body, author:name, user_id:currentUser.id }).select().single();
+      if (res.error) throw res.error;
+      /* vote for your own dossier once, so it doesn't show as un-tamponné to you */
+      await sb.from("votes").insert({ dossier_id: res.data.id, voter_id: currentUser.id });
+      submitBtn.disabled = false;
+      closeModal();
+      sortMode = "recent";
+      sortRecentBtn.setAttribute("aria-pressed", "true");
+      sortVotesBtn.setAttribute("aria-pressed", "false");
+      await loadDossiers();
+    } catch(err){
+      console.error("La Galère — échec de l'envoi :", err);
+      submitBtn.disabled = false;
+      showError("L'envoi a échoué. Vérifiez votre connexion et réessayez.");
+    }
+  });
+
+  /* ---------- ticket number, cosmetic ---------- */
+  var ticketEl = document.getElementById("ticketNum");
+  var ticket = safeGet(LS_TICKET);
+  if (!ticket){
+    ticket = 480000 + Math.floor(Math.random()*900);
+    safeSet(LS_TICKET, ticket);
+  }
+  ticketEl.textContent = "— N° " + String(ticket).padStart(6, "0");
+
+  if (sb){
+    sb.auth.getSession().then(function(res){
+      currentUser = res.data.session ? res.data.session.user : null;
+      renderAuthArea();
+      loadDossiers();
+    });
+    sb.auth.onAuthStateChange(function(event, session){
+      currentUser = session ? session.user : null;
+      renderAuthArea();
+      if (authOverlay.classList.contains("open")) closeAuthModal();
+      loadDossiers();
+    });
+  } else {
+    renderAuthArea();
+    loadDossiers();
+  }
+})();
+</script>

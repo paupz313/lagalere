@@ -148,17 +148,6 @@
     border-radius:3px;
     padding:2px 6px;
   }
-  .header-actions{display:flex; align-items:center; gap:12px;}
-  .auth-area{display:flex; align-items:center; gap:10px;}
-  .auth-email{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:0.78rem;
-    color:var(--ink-soft);
-    max-width:16ch;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-  }
   .btn{
     font-weight:600;
     font-size:0.92rem;
@@ -607,10 +596,7 @@
       <span class="name">La Galère</span>
       <span class="tick mono">GUICHET N°1</span>
     </div>
-    <div class="header-actions">
-      <div class="auth-area" id="authArea"></div>
-      <button class="btn" id="openFormTop" type="button">Raconter ma galère</button>
-    </div>
+    <button class="btn" id="openFormTop" type="button">Raconter ma galère</button>
   </div>
 </header>
 
@@ -723,30 +709,6 @@
   </div>
 </div>
 
-<div class="overlay" id="authOverlay">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
-    <div class="modal-top">
-      <div>
-        <span class="eyebrow">Connexion</span>
-        <h2 id="authModalTitle">Recevoir un lien de connexion</h2>
-      </div>
-      <button class="close-x" id="closeAuthModal" type="button" aria-label="Fermer">&times;</button>
-    </div>
-    <form class="dossier" id="authForm">
-      <div class="field">
-        <label for="authEmail">Votre email</label>
-        <input id="authEmail" type="email" required placeholder="vous@exemple.fr">
-      </div>
-      <p class="hint">Pas de mot de passe : on vous envoie un lien, cliquez dessus pour vous connecter. Il faut un compte pour raconter une galère ou tamponner « vécu aussi ».</p>
-      <p class="hint error" id="authError" hidden></p>
-      <div class="modal-actions">
-        <button type="button" class="btn ghost" id="cancelAuth">Annuler</button>
-        <button type="submit" class="btn" id="authSubmit">Envoyer le lien</button>
-      </div>
-    </form>
-  </div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
@@ -822,6 +784,7 @@
   }
 
   var LS_TICKET = "lagalere_v1_ticket";
+  var LS_VOTER = "lagalere_voter_id";
 
   function safeGet(key){
     try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }
@@ -831,74 +794,14 @@
     try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){ /* ignore */ }
   }
 
-  /* ---------- auth (magic link) ---------- */
-  var currentUser = null;
-  var authArea = document.getElementById("authArea");
-  var authOverlay = document.getElementById("authOverlay");
-  var authForm = document.getElementById("authForm");
-  var authEmail = document.getElementById("authEmail");
-  var authError = document.getElementById("authError");
-  var authSubmit = document.getElementById("authSubmit");
-  var authFormOriginalHtml = authForm.innerHTML;
-
-  function renderAuthArea(){
-    if (!authArea) return;
-    authArea.innerHTML = "";
-    if (currentUser){
-      var emailSpan = document.createElement("span");
-      emailSpan.className = "auth-email mono";
-      emailSpan.title = currentUser.email;
-      emailSpan.textContent = currentUser.email;
-      var signOutBtn = document.createElement("button");
-      signOutBtn.type = "button";
-      signOutBtn.className = "btn ghost";
-      signOutBtn.textContent = "Se déconnecter";
-      signOutBtn.addEventListener("click", function(){ sb.auth.signOut(); });
-      authArea.appendChild(emailSpan);
-      authArea.appendChild(signOutBtn);
-    } else {
-      var loginBtn = document.createElement("button");
-      loginBtn.type = "button";
-      loginBtn.className = "btn ghost";
-      loginBtn.textContent = "Se connecter";
-      loginBtn.addEventListener("click", openAuthModal);
-      authArea.appendChild(loginBtn);
+  function getVoterId(){
+    var id = safeGet(LS_VOTER);
+    if (!id){
+      id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ("v" + Date.now() + Math.random().toString(16).slice(2));
+      safeSet(LS_VOTER, id);
     }
+    return id;
   }
-
-  function openAuthModal(){
-    authForm.innerHTML = authFormOriginalHtml;
-    authEmail = document.getElementById("authEmail");
-    authError = document.getElementById("authError");
-    authSubmit = document.getElementById("authSubmit");
-    authOverlay.classList.add("open");
-    authEmail.focus();
-  }
-  function closeAuthModal(){
-    authOverlay.classList.remove("open");
-  }
-  document.getElementById("closeAuthModal").addEventListener("click", closeAuthModal);
-  document.getElementById("cancelAuth").addEventListener("click", closeAuthModal);
-  authOverlay.addEventListener("click", function(e){ if (e.target === authOverlay) closeAuthModal(); });
-  document.addEventListener("keydown", function(e){ if (e.key === "Escape" && authOverlay.classList.contains("open")) closeAuthModal(); });
-
-  authForm.addEventListener("submit", async function(e){
-    e.preventDefault();
-    authError.hidden = true;
-    var email = authEmail.value.trim();
-    if (!email || !sb) return;
-    authSubmit.disabled = true;
-    try{
-      var res = await sb.auth.signInWithOtp({ email: email, options: { emailRedirectTo: window.location.href } });
-      if (res.error) throw res.error;
-      authForm.innerHTML = '<p class="hint">Lien envoyé à ' + escapeHtml(email) + '. Ouvrez-le depuis cet appareil pour vous connecter (pensez à vérifier vos spams).</p>';
-    } catch(err){
-      console.error("La Galère — échec de connexion :", err);
-      authError.textContent = "Impossible d'envoyer le lien. Vérifiez l'adresse et réessayez.";
-      authError.hidden = false;
-      authSubmit.disabled = false;
-    }
-  });
 
   var dossiers = [];      /* current list rendered, from Supabase (or SEED in demo mode) */
   var voted = {};          /* dossier id -> true, for the current voterId */
@@ -1000,20 +903,19 @@
     loading = true;
     render();
     try{
+      var voterId = getVoterId();
       var dossiersRes = await sb.from("dossiers").select("*").order("created_at", { ascending:false });
       if (dossiersRes.error) throw dossiersRes.error;
       var votesRes = await sb.from("dossier_votes").select("*");
       if (votesRes.error) throw votesRes.error;
+      var myVotesRes = await sb.from("votes").select("dossier_id").eq("voter_id", voterId);
+      if (myVotesRes.error) throw myVotesRes.error;
 
       var votesMap = {};
       (votesRes.data || []).forEach(function(v){ votesMap[v.dossier_id] = v.votes; });
 
       voted = {};
-      if (currentUser){
-        var myVotesRes = await sb.from("votes").select("dossier_id").eq("voter_id", currentUser.id);
-        if (myVotesRes.error) throw myVotesRes.error;
-        (myVotesRes.data || []).forEach(function(v){ voted[v.dossier_id] = true; });
-      }
+      (myVotesRes.data || []).forEach(function(v){ voted[v.dossier_id] = true; });
 
       dossiers = (dossiersRes.data || []).map(function(d){
         return {
@@ -1060,11 +962,6 @@
     var d = dossiers.find(function(x){ return x.id === id; });
     if (!d) return;
 
-    if (supabaseReady && !currentUser){
-      openAuthModal();
-      return;
-    }
-
     /* instant optimistic feedback */
     btn.disabled = true;
     btn.classList.add("voted");
@@ -1079,7 +976,7 @@
       return;
     }
 
-    sb.from("votes").insert({ dossier_id: id, voter_id: currentUser.id }).then(function(res){
+    sb.from("votes").insert({ dossier_id: id, voter_id: getVoterId() }).then(function(res){
       if (res.error && res.error.code !== "23505" /* already voted, fine */){
         console.error("La Galère — échec du vote :", res.error);
       }
@@ -1154,10 +1051,6 @@
   });
 
   function openModal(){
-    if (supabaseReady && !currentUser){
-      openAuthModal();
-      return;
-    }
     overlay.classList.add("open");
     modalOpenedAt = Date.now();
     fTitle.focus();
@@ -1219,17 +1112,11 @@
       return;
     }
 
-    if (!currentUser){
-      submitBtn.disabled = false;
-      openAuthModal();
-      return;
-    }
-
     try{
-      var res = await sb.from("dossiers").insert({ no:no, cat:cat, title:title, body:body, author:name, user_id:currentUser.id }).select().single();
+      var res = await sb.from("dossiers").insert({ no:no, cat:cat, title:title, body:body, author:name }).select().single();
       if (res.error) throw res.error;
       /* vote for your own dossier once, so it doesn't show as un-tamponné to you */
-      await sb.from("votes").insert({ dossier_id: res.data.id, voter_id: currentUser.id });
+      await sb.from("votes").insert({ dossier_id: res.data.id, voter_id: getVoterId() });
       submitBtn.disabled = false;
       closeModal();
       sortMode = "recent";
@@ -1252,21 +1139,6 @@
   }
   ticketEl.textContent = "— N° " + String(ticket).padStart(6, "0");
 
-  if (sb){
-    sb.auth.getSession().then(function(res){
-      currentUser = res.data.session ? res.data.session.user : null;
-      renderAuthArea();
-      loadDossiers();
-    });
-    sb.auth.onAuthStateChange(function(event, session){
-      currentUser = session ? session.user : null;
-      renderAuthArea();
-      if (authOverlay.classList.contains("open")) closeAuthModal();
-      loadDossiers();
-    });
-  } else {
-    renderAuthArea();
-    loadDossiers();
-  }
+  loadDossiers();
 })();
 </script>

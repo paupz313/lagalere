@@ -1013,6 +1013,7 @@
     "Le service est momentanément indisponible.",
     "Votre demande n'a pas pu aboutir. Réessayez."
   ];
+  var LED_FAIL_MESSAGES = ["OUPS !", "AÏE !"];
 
   function randomTicketNum(){ return 480000 + Math.floor(Math.random() * 900); }
   function fmtTicket(n){ return "N° " + String(n).padStart(6, "0"); }
@@ -1030,7 +1031,7 @@
     ticketAttempts++;
 
     if (ticketAttempts <= 2){
-      ticketLedEl.textContent = "ERREUR";
+      ticketLedEl.textContent = LED_FAIL_MESSAGES[(ticketAttempts - 1) % LED_FAIL_MESSAGES.length];
       machineNoteEl.textContent = FAIL_MESSAGES[(ticketAttempts - 1) % FAIL_MESSAGES.length];
       machineNoteEl.classList.add("fail");
       shakeMachine();
@@ -1110,8 +1111,11 @@
   var WRONG_COUNTER_X = 250;
   var CORRECT_COUNTER_X = 195;
 
-  function showStorm(){ wrStormEl.classList.add("show"); }
-  function hideStorm(){ wrStormEl.classList.remove("show"); }
+  function showHeadEmoji(text){
+    wrStormEl.textContent = text;
+    wrStormEl.classList.add("show");
+  }
+  function hideHeadEmoji(){ wrStormEl.classList.remove("show"); }
 
   function setStatus(msg){
     wrStatusEl.textContent = msg;
@@ -1192,18 +1196,20 @@
 
   function walkToCounter(){
     personEl.className = "wr-person walking";
-    showStorm();
+    showHeadEmoji("⛈️😡💢");
     personEl.style.left = WRONG_COUNTER_X + "px";
 
     setTimeout(function(){
       personEl.className = "wr-person peering";
       setStatus("Ah non, c'est pas ici, c'est l'autre guichet !");
       setTimeout(function(){
-        hideStorm();
+        hideHeadEmoji();
         clearStatus();
         personEl.className = "wr-person walking";
+        showHeadEmoji("😤💨🙄");
         personEl.style.left = CORRECT_COUNTER_X + "px";
         setTimeout(function(){
+          hideHeadEmoji();
           personEl.className = "wr-person peering";
           setTimeout(openModal, 900);
         }, 900);

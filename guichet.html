@@ -374,16 +374,26 @@
     background:#7a3b3b;
     border:2px solid #4a1f1f;
   }
-  .wr-chair:nth-of-type(1){left:16px;}
-  .wr-chair:nth-of-type(2){left:66px;}
-  .wr-chair:nth-of-type(3){left:116px;}
   .wr-counter{
     position:absolute;
-    right:14px; bottom:8px;
-    width:50px; height:64px;
+    bottom:8px;
+    width:40px; height:60px;
     background:#5c6b73;
     border:2px solid #33393d;
   }
+  .wr-counter.wrong{background:#6b5c73; border-color:#3d3345;}
+  .wr-storm{
+    position:absolute;
+    top:-20px; left:50%;
+    transform:translateX(-50%);
+    font-size:1rem;
+    line-height:1;
+    opacity:0;
+    transition:opacity 0.25s;
+    pointer-events:none;
+    white-space:nowrap;
+  }
+  .wr-storm.show{opacity:1;}
   .wr-person{
     position:absolute;
     bottom:8px; left:-40px;
@@ -654,11 +664,13 @@
               <div class="wr-bg-person" style="left:20px;"></div>
               <div class="wr-bg-person" style="left:140px;"></div>
             </div>
-            <div class="wr-chair"></div>
-            <div class="wr-chair"></div>
-            <div class="wr-chair"></div>
-            <div class="wr-counter"></div>
+            <div class="wr-chair" style="left:16px;"></div>
+            <div class="wr-chair" style="left:56px;"></div>
+            <div class="wr-chair" style="left:96px;"></div>
+            <div class="wr-counter" id="wrCounterRight" style="right:12px;"></div>
+            <div class="wr-counter" id="wrCounterCorrect" style="right:66px;"></div>
             <div class="wr-person" id="wrPerson" hidden>
+              <div class="wr-storm" id="wrStorm" aria-hidden="true">⛈️😡</div>
               <div class="wr-head"></div>
               <div class="wr-body"></div>
               <div class="wr-leg wr-leg-l"></div>
@@ -996,9 +1008,10 @@
   var ticketNumSpanEl = document.getElementById("ticketNumSpan");
 
   var FAIL_MESSAGES = [
-    "Oups, réessayez.",
-    "Erreur du distributeur. Réessayez.",
-    "Ticket coincé. Réessayez."
+    "Une erreur est survenue. Veuillez réessayer.",
+    "Une mise à jour est en cours. Merci de patienter.",
+    "Le service est momentanément indisponible.",
+    "Votre demande n'a pas pu aboutir. Réessayez."
   ];
 
   function randomTicketNum(){ return 480000 + Math.floor(Math.random() * 900); }
@@ -1092,6 +1105,13 @@
   var wrStatusEl = document.getElementById("wrStatus");
   var wrPlantEl = document.getElementById("wrPlant");
   var wrCrowdEl = document.getElementById("wrCrowd");
+  var wrStormEl = document.getElementById("wrStorm");
+
+  var WRONG_COUNTER_X = 250;
+  var CORRECT_COUNTER_X = 195;
+
+  function showStorm(){ wrStormEl.classList.add("show"); }
+  function hideStorm(){ wrStormEl.classList.remove("show"); }
 
   function setStatus(msg){
     wrStatusEl.textContent = msg;
@@ -1172,11 +1192,22 @@
 
   function walkToCounter(){
     personEl.className = "wr-person walking";
-    personEl.style.left = "252px";
+    showStorm();
+    personEl.style.left = WRONG_COUNTER_X + "px";
+
     setTimeout(function(){
       personEl.className = "wr-person peering";
-      clearStatus();
-      setTimeout(openModal, 900);
+      setStatus("Ah non, c'est pas ici, c'est l'autre guichet !");
+      setTimeout(function(){
+        hideStorm();
+        clearStatus();
+        personEl.className = "wr-person walking";
+        personEl.style.left = CORRECT_COUNTER_X + "px";
+        setTimeout(function(){
+          personEl.className = "wr-person peering";
+          setTimeout(openModal, 900);
+        }, 900);
+      }, 1300);
     }, 1350);
   }
 })();

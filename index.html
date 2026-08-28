@@ -309,6 +309,8 @@
     border-color:var(--ink);
   }
   select.filter, input.filter{
+    box-sizing:border-box;
+    height:36px;
     font-family:'IBM Plex Mono', monospace;
     font-size:0.78rem;
     background:var(--card-bg);
@@ -316,16 +318,27 @@
     border:1px solid var(--line);
     border-radius:2px;
     padding:8px 10px;
+    vertical-align:middle;
   }
   .toolbar-filters{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .search-wrap{position:relative; width:200px; max-width:100%;}
+  .search-wrap svg{
+    position:absolute;
+    left:10px; top:50%;
+    transform:translateY(-50%);
+    color:var(--ink-faint);
+    pointer-events:none;
+  }
   input.filter{
-    width:200px;
-    max-width:100%;
+    width:100%;
+    appearance:none; -webkit-appearance:none;
+    padding-left:28px;
   }
   input.filter::placeholder{
     color:var(--ink-faint);
     font-family:'IBM Plex Mono', monospace;
   }
+  input.filter::-webkit-search-cancel-button{ -webkit-appearance:none; }
 
   /* ---------- feed ---------- */
   .feed{padding:8px 0 20px; display:flex; flex-direction:column; gap:16px;}
@@ -541,7 +554,13 @@
       <button class="tab" id="sortRecent" role="tab" aria-pressed="false" type="button">Les plus récentes</button>
     </div>
     <div class="toolbar-filters">
-      <input type="search" class="filter" id="searchQuery" placeholder="Rechercher un dossier…" aria-label="Rechercher un dossier">
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/>
+          <line x1="21" y1="21" x2="16.2" y2="16.2"/>
+        </svg>
+        <input type="search" class="filter" id="searchQuery" placeholder="Rechercher un dossier…" aria-label="Rechercher un dossier">
+      </div>
       <select class="filter" id="filterCat" aria-label="Filtrer par administration">
         <option value="">Toutes les administrations</option>
       </select>

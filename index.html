@@ -264,118 +264,27 @@
   }
   .stamp span.big{font-size:0.86rem; font-weight:700; margin:2px 0;}
 
-  .hero-actions{
-    margin-top:30px;
-    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
-  }
-
-  /* ---------- ticket machine: deliberately Windows 98 / retro kiosk —
-     a clash on purpose against the rest of the page's paper aesthetic ---------- */
-  .win98-machine{
-    position:relative;
-    width:230px;
-    background:#c0c0c0;
-    border:2px solid;
-    border-color:#fff #000 #000 #fff;
-    box-shadow:inset 1px 1px 0 #dfdfdf, inset -1px -1px 0 #808080, 3px 3px 0 rgba(0,0,0,0.35);
-    font-family:'Tahoma','MS Sans Serif',Geneva,sans-serif;
-  }
-  .win98-titlebar{
-    background:linear-gradient(90deg,#000080,#1084d0);
-    color:#fff;
-    font-size:11px;
-    font-weight:bold;
-    padding:3px 5px;
+  /* ---------- entry sign: points to the guichet page ---------- */
+  .entry-sign{
+    padding:30px 32px;
+    margin:0 0 30px;
     display:flex;
     align-items:center;
-    justify-content:space-between;
-    letter-spacing:0.02em;
+    gap:28px;
+    flex-wrap:wrap;
+    transform:rotate(0.2deg);
   }
-  .win98-titlebar .dots{display:flex; gap:3px;}
-  .win98-titlebar .dot{
-    width:13px; height:11px;
-    background:#c0c0c0;
-    border:1px solid;
-    border-color:#fff #000 #000 #fff;
-    font-size:9px; line-height:10px; text-align:center; color:#000; font-weight:bold;
+  .entry-building{
+    flex:none;
+    color:var(--ink-soft);
   }
-  .win98-body{padding:10px;}
-  .win98-screen{
-    background:#0c0f0a;
-    border:2px solid;
-    border-color:#000 #fff #fff #000;
-    padding:8px 6px;
-    margin-bottom:10px;
-    text-align:center;
-  }
-  .win98-screen .led-label{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:9px;
-    color:#4d7a4d;
-    letter-spacing:0.12em;
-    text-transform:uppercase;
-    margin-bottom:4px;
-  }
-  .win98-screen .led-display{
-    font-family:'IBM Plex Mono', monospace;
-    font-weight:700;
-    font-size:1.25rem;
-    letter-spacing:0.06em;
-    color:#ff4433;
-    text-shadow:0 0 6px rgba(255,68,51,0.75), 0 0 2px rgba(255,68,51,0.9);
-  }
-  .win98-button{
-    display:block;
-    width:100%;
-    font-family:'Tahoma','MS Sans Serif',Geneva,sans-serif;
-    font-weight:bold;
-    font-size:12px;
-    text-transform:uppercase;
-    letter-spacing:0.02em;
-    background:#c0c0c0;
-    color:#000;
-    border:2px solid;
-    border-color:#fff #000 #000 #fff;
-    box-shadow:inset 1px 1px 0 #dfdfdf, inset -1px -1px 0 #808080;
-    padding:9px 10px;
-    cursor:pointer;
-  }
-  .win98-button:active{
-    border-color:#000 #fff #fff #000;
-    box-shadow:inset 1px 1px 0 #808080, inset -1px -1px 0 #dfdfdf;
-    padding:10px 9px 8px 11px;
-  }
-  .win98-button:disabled{color:#808080; cursor:default;}
-  .ticket-slot{
-    height:5px;
-    background:#000;
-    margin:8px 2px 0;
-    box-shadow:inset 0 1px 2px rgba(0,0,0,0.8);
-  }
-  .ticket-paper{
-    position:absolute;
-    top:100%; left:50%;
-    width:170px;
-    transform:translate(-50%, -14px);
-    background:#fdfdf5;
-    color:#111;
-    font-family:'IBM Plex Mono', monospace;
-    font-weight:700;
-    font-size:0.85rem;
-    text-align:center;
-    padding:10px 8px 12px;
-    border-left:1px dashed #999;
-    border-right:1px dashed #999;
-    box-shadow:0 4px 10px rgba(0,0,0,0.4);
-    opacity:0;
-    z-index:4;
-  }
-  .ticket-paper .stub{display:block; font-size:0.65rem; color:#777; margin-top:4px; letter-spacing:0.05em;}
-  .ticket-paper.playing{animation:ticketSlideOut 0.9s cubic-bezier(.25,0.05,.2,1) forwards;}
-  @keyframes ticketSlideOut{
-    0%{ transform:translate(-50%,-14px); opacity:0; }
-    12%{ opacity:1; }
-    100%{ transform:translate(-50%,38px); opacity:1; }
+  .entry-copy h2{font-size:1.4rem; font-weight:600; margin:6px 0 8px;}
+  .entry-copy p{color:var(--ink-soft); max-width:46ch; margin:0 0 16px;}
+  .entry-copy .btn{display:inline-flex; align-items:center; gap:8px;}
+
+  @media (max-width: 560px){
+    .entry-sign{flex-direction:column; text-align:center;}
+    .entry-copy p{max-width:none;}
   }
 
   /* ---------- stats ---------- */
@@ -532,92 +441,6 @@
     margin:0;
   }
 
-  /* ---------- modal ---------- */
-  .overlay{
-    position:fixed; inset:0;
-    background:rgba(20,24,32,0.55);
-    display:none;
-    align-items:flex-start;
-    justify-content:center;
-    padding:40px 20px;
-    overflow-y:auto;
-    z-index:100;
-  }
-  .overlay.open{display:flex;}
-  .modal{
-    background:var(--card-bg);
-    border:1px solid var(--line-strong);
-    border-radius:3px;
-    max-width:520px;
-    width:100%;
-    padding:26px 26px 22px;
-    box-shadow:0 10px 40px var(--shadow);
-  }
-  .modal-top{
-    display:flex; align-items:center; justify-content:space-between;
-    margin-bottom:4px;
-  }
-  .modal h2{font-size:1.3rem; font-weight:600;}
-  .modal .eyebrow{display:block; margin-bottom:6px;}
-  .close-x{
-    background:none; border:none; color:var(--ink-faint);
-    font-size:1.3rem; line-height:1; cursor:pointer; padding:4px;
-  }
-  .close-x:hover{color:var(--stamp);}
-  form.dossier{margin-top:16px; display:flex; flex-direction:column; gap:14px;}
-  .field label{
-    display:block;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:0.72rem;
-    letter-spacing:0.04em;
-    text-transform:uppercase;
-    color:var(--ink-soft);
-    margin-bottom:6px;
-  }
-  .field input, .field select, .field textarea{
-    width:100%;
-    font-family:'Work Sans', sans-serif;
-    font-size:0.95rem;
-    color:var(--ink);
-    background:var(--paper-raised);
-    border:1px solid var(--line-strong);
-    border-radius:2px;
-    padding:10px 12px;
-  }
-  .field textarea{min-height:110px; resize:vertical; font-family:inherit;}
-  .field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--focus); outline-offset:1px;}
-  .modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:4px;}
-  .hint{font-size:0.76rem; color:var(--ink-faint); margin-top:-6px;}
-  .hint.error{color:var(--stamp); font-weight:600;}
-
-  /* ---------- theme suggestion ---------- */
-  .suggest-box{
-    background:var(--stamp-soft);
-    border:1px dashed var(--stamp);
-    border-radius:2px;
-    padding:12px 14px;
-    margin-top:-2px;
-  }
-  .suggest-box p{margin:2px 0 10px; font-size:0.92rem;}
-  .suggest-box p strong{color:var(--stamp);}
-  .suggest-actions{display:flex; gap:8px; flex-wrap:wrap;}
-  .btn.small{
-    font-size:0.78rem;
-    padding:6px 11px;
-  }
-  .suggest-box .hint{margin-top:8px;}
-
-  /* honeypot: kept in the DOM and tabbable-looking to humans, off-screen so only bots that
-     auto-fill every field trip it */
-  .hp-field{
-    position:absolute;
-    left:-9999px;
-    top:auto;
-    width:1px;
-    height:1px;
-    overflow:hidden;
-  }
-
   /* ---------- ink stamp animation ---------- */
   @keyframes stampSlam{
     0%{ transform:translate(-50%,-50%) scale(2.2) rotate(-20deg); opacity:0; }
@@ -701,22 +524,30 @@
         </span>
       </div>
     </div>
-    <div class="hero-actions">
-      <div class="win98-machine">
-        <div class="win98-titlebar">
-          <span>GUICHET AUTOMATIQUE</span>
-          <span class="dots" aria-hidden="true"><span class="dot">_</span><span class="dot">×</span></span>
-        </div>
-        <div class="win98-body">
-          <div class="win98-screen">
-            <div class="led-label">Votre numéro</div>
-            <div class="led-display" id="ticketLed">PRÊT</div>
-          </div>
-          <button class="win98-button" id="openFormHero" type="button">Prendre un ticket</button>
-        </div>
-        <div class="ticket-slot" aria-hidden="true"></div>
-        <div class="ticket-paper" id="ticketPrint" aria-hidden="true"></div>
-      </div>
+  </section>
+
+  <section class="entry-sign paper-panel dog-ear">
+    <div class="entry-building" aria-hidden="true">
+      <svg viewBox="0 0 200 140" width="130" height="91" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="100" y1="6" x2="100" y2="26"/>
+        <path d="M100 8 L118 13 L100 18 Z" fill="currentColor" stroke="none"/>
+        <path d="M20 46 L100 14 L180 46 Z"/>
+        <rect x="26" y="46" width="148" height="72"/>
+        <line x1="46" y1="46" x2="46" y2="118"/>
+        <line x1="76" y1="46" x2="76" y2="118"/>
+        <line x1="106" y1="46" x2="106" y2="118"/>
+        <line x1="136" y1="46" x2="136" y2="118"/>
+        <line x1="164" y1="46" x2="164" y2="118"/>
+        <rect x="88" y="88" width="24" height="30"/>
+        <line x1="10" y1="118" x2="190" y2="118"/>
+        <line x1="14" y1="126" x2="186" y2="126"/>
+      </svg>
+    </div>
+    <div class="entry-copy">
+      <p class="eyebrow">Guichet des dossiers</p>
+      <h2>Vous avez un rendez-vous ?</h2>
+      <p>Entrez, prenez un ticket, et racontez votre galère au guichet.</p>
+      <a class="btn" href="guichet.html">Entrer <span aria-hidden="true">→</span></a>
     </div>
   </section>
 
@@ -754,55 +585,6 @@
   </footer>
 
 </main>
-
-<div class="overlay" id="overlay">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal-top">
-      <div>
-        <span class="eyebrow">Nouveau dossier</span>
-        <h2 id="modalTitle">Déposer votre galère</h2>
-      </div>
-      <button class="close-x" id="closeModal" type="button" aria-label="Fermer">&times;</button>
-    </div>
-    <form class="dossier" id="dossierForm">
-      <div class="field">
-        <label for="fTitle">Intitulé de votre galère</label>
-        <input id="fTitle" type="text" maxlength="90" required placeholder="Ex. : Un formulaire pour obtenir un formulaire">
-      </div>
-      <div class="field">
-        <label for="fBody">Racontez</label>
-        <textarea id="fBody" maxlength="600" required placeholder="Ce qui s'est passé, avec autant de détails absurdes que possible."></textarea>
-      </div>
-      <div class="suggest-box" id="suggestBox" hidden>
-        <span class="eyebrow">Thème suggéré</span>
-        <p>On pense qu'il s'agit de : <strong id="suggestCat"></strong></p>
-        <div class="suggest-actions">
-          <button type="button" class="btn small" id="suggestAccept">Oui, c'est ça</button>
-          <button type="button" class="btn ghost small" id="suggestReject">Non, je choisis</button>
-        </div>
-        <p class="hint">Suggestion basée sur des mots-clés dans votre texte, pas une vraie IA — vous pouvez toujours changer.</p>
-      </div>
-      <div class="field">
-        <label for="fCat">Administration concernée</label>
-        <select id="fCat" required></select>
-      </div>
-      <div class="field">
-        <label for="fName">Votre nom ou pseudo</label>
-        <input id="fName" type="text" maxlength="40" placeholder="Anonyme">
-        <p class="hint">Facultatif. Personne ne vous demandera de pièce justificative — pour une fois.</p>
-      </div>
-      <div class="field hp-field" aria-hidden="true">
-        <label for="fWebsite">Laissez ce champ vide</label>
-        <input id="fWebsite" name="fWebsite" type="text" tabindex="-1" autocomplete="off">
-      </div>
-      <p class="hint error" id="formError" hidden></p>
-      <div class="modal-actions">
-        <button type="button" class="btn ghost" id="cancelForm">Annuler</button>
-        <button type="submit" class="btn">Déposer le dossier</button>
-      </div>
-    </form>
-  </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
@@ -852,32 +634,6 @@
     {id:"s8", no:"N°26-004501", date:"2026-01-27", cat:"Logement", title:"APL coupées pour un déménagement pourtant déclaré deux fois", body:"J'ai déclaré mon déménagement le jour même, avec justificatifs, deux fois par sécurité — par courrier et sur l'espace en ligne. La CAF a suspendu mes APL trois mois « en attendant la mise à jour du dossier ». Le dossier, lui, affichait déjà la bonne adresse depuis le premier jour.", author:"DéménagéMaisPasCru", votes:203}
   ];
 
-  var KEYWORDS = {
-    "Impôts & fiscalité": ["impot","impots","fiscal","fiscalite","tresor public","avis d imposition","declaration de revenus","tva","prelevement a la source","dgfip","contribuable"],
-    "CAF & prestations": ["caf","allocation","allocataire","prime d activite","rsa"],
-    "Préfecture & titres de séjour": ["prefecture","titre de sejour","carte de sejour","visa","naturalisation","recepisse","sous-prefecture","regularisation"],
-    "Sécu / CPAM": ["securite sociale","cpam","carte vitale","remboursement","assurance maladie","arret de travail","secu"],
-    "Emploi / France Travail": ["pole emploi","france travail","chomage","actualisation","conseiller emploi","allocation chomage"],
-    "Mairie & état civil": ["mairie","etat civil","acte de naissance","acte de mariage","acte de deces","passeport","carte d identite","cni","recensement"],
-    "Transport & permis": ["carte grise","ants","permis de conduire","point de permis","points de permis","radar","immatriculation","controle technique"],
-    "Logement": ["apl","logement","bailleur","loyer","locataire","hlm","charges locatives","bail"]
-  };
-
-  function normalizeText(s){
-    return String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  }
-
-  function suggestCategory(text){
-    var norm = normalizeText(text);
-    var best = null, bestScore = 0;
-    Object.keys(KEYWORDS).forEach(function(cat){
-      var score = 0;
-      KEYWORDS[cat].forEach(function(kw){ if (norm.indexOf(kw) !== -1) score++; });
-      if (score > bestScore){ bestScore = score; best = cat; }
-    });
-    return bestScore > 0 ? best : null;
-  }
-
   var LS_VOTER = "lagalere_voter_id";
 
   function safeGet(key){
@@ -916,16 +672,6 @@
     var o = document.createElement("option");
     o.value = c; o.textContent = c;
     filterSel.appendChild(o);
-  });
-  var fCat = document.getElementById("fCat");
-  var fCatPlaceholder = document.createElement("option");
-  fCatPlaceholder.value = ""; fCatPlaceholder.textContent = "— à confirmer —";
-  fCatPlaceholder.disabled = true; fCatPlaceholder.selected = true;
-  fCat.appendChild(fCatPlaceholder);
-  CATEGORIES.forEach(function(c){
-    var o = document.createElement("option");
-    o.value = c; o.textContent = c;
-    fCat.appendChild(o);
   });
 
   function escapeHtml(str){
@@ -1095,183 +841,6 @@
     render();
   });
 
-  /* ---------- modal ---------- */
-  var overlay = document.getElementById("overlay");
-  var dossierForm = document.getElementById("dossierForm");
-  var fTitle = document.getElementById("fTitle");
-  var fBody = document.getElementById("fBody");
-  var fName = document.getElementById("fName");
-  var fWebsite = document.getElementById("fWebsite");
-  var formError = document.getElementById("formError");
-  var suggestBox = document.getElementById("suggestBox");
-  var suggestCatEl = document.getElementById("suggestCat");
-  var suggestTimer = null;
-  var suggestionResolved = false;
-  var modalOpenedAt = 0;
-
-  function hideError(){ formError.hidden = true; formError.textContent = ""; }
-  function showError(msg){ formError.textContent = msg; formError.hidden = false; }
-
-  function updateSuggestion(){
-    if (suggestionResolved || fCat.value !== ""){ suggestBox.hidden = true; return; }
-    if (fBody.value.trim().length < 12){ suggestBox.hidden = true; return; }
-    var cat = suggestCategory(fTitle.value + " " + fBody.value);
-    if (cat){
-      suggestCatEl.textContent = cat;
-      suggestBox.hidden = false;
-    } else {
-      suggestBox.hidden = true;
-    }
-  }
-  function scheduleSuggestion(){
-    clearTimeout(suggestTimer);
-    suggestTimer = setTimeout(updateSuggestion, 450);
-  }
-  fTitle.addEventListener("input", scheduleSuggestion);
-  fBody.addEventListener("input", scheduleSuggestion);
-  document.getElementById("suggestAccept").addEventListener("click", function(){
-    fCat.value = suggestCatEl.textContent;
-    suggestionResolved = true;
-    suggestBox.hidden = true;
-  });
-  document.getElementById("suggestReject").addEventListener("click", function(){
-    suggestionResolved = true;
-    suggestBox.hidden = true;
-    fCat.focus();
-  });
-  fCat.addEventListener("change", function(){
-    suggestionResolved = true;
-    suggestBox.hidden = true;
-  });
-
-  function openModal(){
-    overlay.classList.add("open");
-    modalOpenedAt = Date.now();
-    fTitle.focus();
-  }
-  function closeModal(){
-    overlay.classList.remove("open");
-    dossierForm.reset();
-    fCat.value = "";
-    suggestionResolved = false;
-    suggestBox.hidden = true;
-    hideError();
-  }
-  document.getElementById("closeModal").addEventListener("click", closeModal);
-  document.getElementById("cancelForm").addEventListener("click", closeModal);
-  overlay.addEventListener("click", function(e){ if (e.target === overlay) closeModal(); });
-  document.addEventListener("keydown", function(e){ if (e.key === "Escape" && overlay.classList.contains("open")) closeModal(); });
-
-  dossierForm.addEventListener("submit", async function(e){
-    e.preventDefault();
-    hideError();
-
-    /* honeypot: a real visitor never fills this hidden field */
-    if (fWebsite.value.trim() !== ""){
-      closeModal();
-      return;
-    }
-    /* a genuine person needs at least a couple of seconds to write something */
-    if (Date.now() - modalOpenedAt < 1500){
-      showError("Formulaire envoyé trop vite — réessayez, en prenant le temps de raconter.");
-      return;
-    }
-
-    var title = fTitle.value.trim();
-    var cat = fCat.value;
-    var body = fBody.value.trim();
-    var name = fName.value.trim() || "Anonyme";
-    if (!title || !cat || !body){
-      showError("Merci de remplir l'intitulé, le récit et de confirmer un thème.");
-      return;
-    }
-
-    var no = "N°" + String(new Date().getFullYear()).slice(-2) + "-" + String(Math.floor(Math.random()*90000)+10000);
-    var submitBtn = dossierForm.querySelector("button[type=submit]");
-    submitBtn.disabled = true;
-
-    if (!supabaseReady){
-      /* demo mode: local only */
-      var id = "u" + Date.now();
-      dossiers.unshift({ id:id, no:no, date:new Date().toISOString().slice(0,10), cat:cat, title:title, body:body, author:name, votes:1 });
-      voted[id] = true;
-      submitBtn.disabled = false;
-      closeModal();
-      sortMode = "recent";
-      sortRecentBtn.setAttribute("aria-pressed", "true");
-      sortVotesBtn.setAttribute("aria-pressed", "false");
-      render();
-      return;
-    }
-
-    try{
-      var res = await sb.from("dossiers").insert({ no:no, cat:cat, title:title, body:body, author:name }).select().single();
-      if (res.error) throw res.error;
-      /* vote for your own dossier once, so it doesn't show as un-tamponné to you */
-      await sb.from("votes").insert({ dossier_id: res.data.id, voter_id: getVoterId() });
-      submitBtn.disabled = false;
-      closeModal();
-      sortMode = "recent";
-      sortRecentBtn.setAttribute("aria-pressed", "true");
-      sortVotesBtn.setAttribute("aria-pressed", "false");
-      await loadDossiers();
-    } catch(err){
-      console.error("La Galère — échec de l'envoi :", err);
-      submitBtn.disabled = false;
-      showError("L'envoi a échoué. Vérifiez votre connexion et réessayez.");
-    }
-  });
-
-  /* ---------- ticket machine: retro kiosk dispense, then open the form ---------- */
-  var ticketLedEl = document.getElementById("ticketLed");
-  var ticketPaperEl = document.getElementById("ticketPrint");
-  var ticketButtonEl = document.getElementById("openFormHero");
-  var ticketBusy = false;
-
-  function randomTicketStr(){
-    var num = 480000 + Math.floor(Math.random() * 900);
-    return "N° " + String(num).padStart(6, "0");
-  }
-
-  function dispenseTicket(){
-    if (ticketBusy) return;
-
-    var finalStr = randomTicketStr();
-
-    if (prefersReducedMotion){
-      ticketLedEl.textContent = finalStr;
-      openModal();
-      return;
-    }
-
-    ticketBusy = true;
-    ticketButtonEl.disabled = true;
-
-    /* reset any ticket left over from a previous dispense */
-    ticketPaperEl.classList.remove("playing");
-    void ticketPaperEl.offsetWidth;
-    ticketPaperEl.style.opacity = "0";
-
-    /* old-terminal digit flicker before the number settles, like the machine "thinking" */
-    var ticks = 0;
-    var maxTicks = 6;
-    var flicker = setInterval(function(){
-      ticketLedEl.textContent = randomTicketStr();
-      ticks++;
-      if (ticks >= maxTicks){
-        clearInterval(flicker);
-        ticketLedEl.textContent = finalStr;
-        ticketPaperEl.innerHTML = finalStr + '<span class="stub">GUICHET AUTOMATIQUE</span>';
-        ticketPaperEl.classList.add("playing");
-        setTimeout(function(){
-          ticketBusy = false;
-          ticketButtonEl.disabled = false;
-          openModal();
-        }, 500);
-      }
-    }, 80);
-  }
-  ticketButtonEl.addEventListener("click", dispenseTicket);
 
   loadDossiers();
 })();

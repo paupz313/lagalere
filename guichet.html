@@ -1,0 +1,982 @@
+<!--
+  LA GALÈRE — guichet
+  Page dédiée au dépôt d'un dossier : machine à ticket (délibérément Windows 98),
+  petite salle d'attente animée, puis le formulaire. Voir index.html pour la
+  configuration Supabase (les mêmes clés sont utilisées ici).
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Galère — Guichet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  /* ---------- tokens (same as index.html) ---------- */
+  :root{
+    --paper: #FAF8F1;
+    --paper-raised: #FFFFFF;
+    --grain: rgba(150,130,90,0.05);
+    --ink: #2B2620;
+    --ink-soft: #6B6255;
+    --ink-faint: #9A9282;
+    --stamp: #C0392B;
+    --stamp-soft: rgba(192,57,43,0.10);
+    --ochre: #C68A2E;
+    --ochre-text: #8C5F17;
+    --tape: #E4C08A;
+    --pen: #2F5FA3;
+    --line: #E7E0D0;
+    --line-strong: #D2C7AC;
+    --card-bg: #FFFFFF;
+    --focus: #2B6CB0;
+    --shadow: rgba(60,48,28,0.12);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper: #1C1814;
+      --paper-raised: #241F19;
+      --grain: rgba(230,190,120,0.035);
+      --ink: #F1E9DA;
+      --ink-soft: #C9BCA4;
+      --ink-faint: #8F8570;
+      --stamp: #E2725B;
+      --stamp-soft: rgba(226,114,91,0.16);
+      --ochre: #E0AE5C;
+      --ochre-text: #E0AE5C;
+      --tape: #6B5B3C;
+      --pen: #8FB4E0;
+      --line: #3A332A;
+      --line-strong: #4E4534;
+      --card-bg: #241F19;
+      --focus: #7FB3E8;
+      --shadow: rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper: #1C1814;
+    --paper-raised: #241F19;
+    --grain: rgba(230,190,120,0.035);
+    --ink: #F1E9DA;
+    --ink-soft: #C9BCA4;
+    --ink-faint: #8F8570;
+    --stamp: #E2725B;
+    --stamp-soft: rgba(226,114,91,0.16);
+    --ochre: #E0AE5C;
+    --ochre-text: #E0AE5C;
+    --tape: #6B5B3C;
+    --pen: #8FB4E0;
+    --line: #3A332A;
+    --line-strong: #4E4534;
+    --card-bg: #241F19;
+    --focus: #7FB3E8;
+    --shadow: rgba(0,0,0,0.5);
+  }
+
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 20% 8%, var(--grain) 0, transparent 45%),
+      radial-gradient(circle at 82% 60%, var(--grain) 0, transparent 40%),
+      var(--paper);
+    color:var(--ink);
+    font-family:'Work Sans', ui-sans-serif, system-ui, sans-serif;
+    font-size:16px;
+    line-height:1.55;
+  }
+  .handwritten{
+    font-family:'Caveat', 'Segoe Script', cursive;
+    color:var(--pen);
+    font-weight:600;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+  h1,h2,h3{
+    font-family:'Fraunces', Georgia, serif;
+    text-wrap:balance;
+    margin:0;
+    color:var(--ink);
+  }
+  a{color:inherit;}
+  .mono{
+    font-family:'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--stamp);
+    font-weight:600;
+  }
+  button{font-family:inherit;}
+  :focus-visible{outline:2px solid var(--focus); outline-offset:2px;}
+
+  .wrap{max-width:760px; margin:0 auto; padding:0 24px;}
+
+  header.site{
+    border-bottom:1px solid var(--line);
+    padding:18px 0;
+    position:sticky; top:0; z-index:20;
+    background:var(--paper);
+    backdrop-filter: blur(2px);
+  }
+  header.site .wrap{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+  }
+  .wordmark .name{
+    font-family:'Fraunces', serif;
+    font-weight:900;
+    font-size:1.35rem;
+    letter-spacing:-0.01em;
+  }
+  .btn{
+    font-weight:600;
+    font-size:0.92rem;
+    border:1px solid var(--ink);
+    background:var(--ink);
+    color:var(--paper-raised);
+    padding:10px 16px;
+    border-radius:2px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .btn:hover{background:var(--stamp); border-color:var(--stamp);}
+  .btn.ghost{
+    background:transparent;
+    color:var(--ink);
+    border:1px solid var(--line-strong);
+  }
+  .btn.ghost:hover{border-color:var(--stamp); color:var(--stamp); background:transparent;}
+  .btn[disabled]{opacity:0.6; cursor:default;}
+  .btn.small{font-size:0.78rem; padding:6px 11px;}
+
+  .paper-panel{
+    background:var(--card-bg);
+    border:1px solid var(--line);
+    border-radius:2px;
+    box-shadow:0 3px 12px var(--shadow);
+    position:relative;
+  }
+  .dog-ear::after{
+    content:"";
+    position:absolute; top:0; right:0;
+    width:0; height:0;
+    border-style:solid;
+    border-width:0 20px 20px 0;
+    border-color:transparent var(--paper) transparent transparent;
+    filter:drop-shadow(-1px 1px 1px var(--shadow));
+  }
+
+  /* ---------- guichet scene ---------- */
+  main.wrap{padding-top:26px; padding-bottom:60px;}
+  .guichet-scene{padding:34px 32px; margin:0 0 30px;}
+  .guichet-scene > .eyebrow{display:block; margin-bottom:8px;}
+  .guichet-title{font-size:1.7rem; max-width:22ch; margin-bottom:30px;}
+  .scene-row{display:flex; gap:40px; align-items:flex-start; flex-wrap:wrap;}
+  .machine-col{position:relative; flex:none; padding-top:44px;}
+
+  /* ---------- ticket machine: deliberately Windows 98 / retro kiosk ---------- */
+  .ticket-arrow{
+    position:absolute;
+    top:-4px; left:130px;
+    display:flex; align-items:center; gap:6px;
+    color:var(--pen);
+    transform:rotate(-8deg);
+    pointer-events:none;
+  }
+  .ticket-arrow svg{display:block; transform:scaleX(-1);}
+  .ticket-arrow .handwritten{font-size:1.2rem; white-space:nowrap;}
+
+  .win98-machine{
+    position:relative;
+    width:230px;
+    background:#c0c0c0;
+    border:2px solid;
+    border-color:#fff #000 #000 #fff;
+    box-shadow:inset 1px 1px 0 #dfdfdf, inset -1px -1px 0 #808080, 3px 3px 0 rgba(0,0,0,0.35);
+    font-family:'Tahoma','MS Sans Serif',Geneva,sans-serif;
+  }
+  @keyframes machineShake{
+    0%,100%{ transform:translateX(0); }
+    20%{ transform:translateX(-4px); }
+    40%{ transform:translateX(4px); }
+    60%{ transform:translateX(-3px); }
+    80%{ transform:translateX(3px); }
+  }
+  .win98-machine.shake{animation:machineShake 0.4s ease-in-out;}
+  .win98-titlebar{
+    background:linear-gradient(90deg,#000080,#1084d0);
+    color:#fff;
+    font-size:11px;
+    font-weight:bold;
+    padding:3px 5px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    letter-spacing:0.02em;
+  }
+  .win98-titlebar .dots{display:flex; gap:3px;}
+  .win98-titlebar .dot{
+    width:13px; height:11px;
+    background:#c0c0c0;
+    border:1px solid;
+    border-color:#fff #000 #000 #fff;
+    font-size:9px; line-height:10px; text-align:center; color:#000; font-weight:bold;
+  }
+  .win98-body{padding:10px;}
+  .win98-screen{
+    background:#0c0f0a;
+    border:2px solid;
+    border-color:#000 #fff #fff #000;
+    padding:8px 6px;
+    margin-bottom:10px;
+    text-align:center;
+  }
+  .win98-screen .led-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:9px;
+    color:#4d7a4d;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    margin-bottom:4px;
+  }
+  .win98-screen .led-display{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:700;
+    font-size:1.25rem;
+    letter-spacing:0.06em;
+    color:#ff4433;
+    text-shadow:0 0 6px rgba(255,68,51,0.75), 0 0 2px rgba(255,68,51,0.9);
+  }
+  .win98-button{
+    display:block;
+    width:100%;
+    font-family:'Tahoma','MS Sans Serif',Geneva,sans-serif;
+    font-weight:bold;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.02em;
+    background:#c0c0c0;
+    color:#000;
+    border:2px solid;
+    border-color:#fff #000 #000 #fff;
+    box-shadow:inset 1px 1px 0 #dfdfdf, inset -1px -1px 0 #808080;
+    padding:9px 10px;
+    cursor:pointer;
+  }
+  .win98-button:active{
+    border-color:#000 #fff #fff #000;
+    box-shadow:inset 1px 1px 0 #808080, inset -1px -1px 0 #dfdfdf;
+    padding:10px 9px 8px 11px;
+  }
+  .win98-button:disabled{color:#808080; cursor:default;}
+  .ticket-slot{
+    height:5px;
+    background:#000;
+    margin:8px 2px 0;
+    box-shadow:inset 0 1px 2px rgba(0,0,0,0.8);
+  }
+  .ticket-paper{
+    position:absolute;
+    top:100%; left:50%;
+    width:170px;
+    transform:translate(-50%, -14px);
+    background:#fdfdf5;
+    color:#111;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:700;
+    font-size:0.85rem;
+    text-align:center;
+    padding:10px 8px 12px;
+    border-left:1px dashed #999;
+    border-right:1px dashed #999;
+    box-shadow:0 4px 10px rgba(0,0,0,0.4);
+    opacity:0;
+    z-index:4;
+  }
+  .ticket-paper .stub{display:block; font-size:0.65rem; color:#777; margin-top:4px; letter-spacing:0.05em;}
+  .ticket-paper.playing{animation:ticketSlideOut 0.9s cubic-bezier(.25,0.05,.2,1) forwards;}
+  @keyframes ticketSlideOut{
+    0%{ transform:translate(-50%,-14px); opacity:0; }
+    12%{ opacity:1; }
+    100%{ transform:translate(-50%,38px); opacity:1; }
+  }
+  .machine-note{
+    min-height:1.3em;
+    margin:12px 2px 0;
+    max-width:230px;
+    font-size:0.82rem;
+    color:var(--ink-faint);
+  }
+  .machine-note.fail{color:var(--stamp); font-weight:600;}
+
+  /* ---------- waiting room: simple retro pixel scene ---------- */
+  .waitingroom-col{flex:1; min-width:260px;}
+  .waiting-room{
+    width:100%;
+    max-width:320px;
+    background:#232820;
+    border:3px solid #12140f;
+    border-radius:2px;
+    padding:10px;
+  }
+  .wr-board{
+    background:#111;
+    border:2px solid #3a3a3a;
+    color:#ffb020;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.78rem;
+    padding:6px 10px;
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:10px;
+    letter-spacing:0.04em;
+  }
+  .wr-floor{
+    position:relative;
+    height:170px;
+    background:#c9b98a;
+    border-top:4px solid #7a6a45;
+    overflow:hidden;
+  }
+  .wr-status{
+    position:absolute;
+    top:8px; left:8px; right:8px;
+    z-index:5;
+    text-align:center;
+    font-family:'Caveat', cursive;
+    font-weight:700;
+    font-size:1.15rem;
+    color:#1a1a1a;
+    background:rgba(255,255,255,0.88);
+    border-radius:4px;
+    padding:2px 6px;
+    opacity:0;
+    transition:opacity 0.3s;
+  }
+  .wr-status.show{opacity:1;}
+  .wr-chair{
+    position:absolute;
+    bottom:8px;
+    width:34px; height:38px;
+    background:#7a3b3b;
+    border:2px solid #4a1f1f;
+  }
+  .wr-chair:nth-of-type(1){left:16px;}
+  .wr-chair:nth-of-type(2){left:66px;}
+  .wr-chair:nth-of-type(3){left:116px;}
+  .wr-counter{
+    position:absolute;
+    right:14px; bottom:8px;
+    width:50px; height:64px;
+    background:#5c6b73;
+    border:2px solid #33393d;
+  }
+  .wr-person{
+    position:absolute;
+    bottom:8px; left:-40px;
+    width:20px; height:50px;
+    transition:left 1.3s ease-in-out;
+    z-index:3;
+  }
+  .wr-head{
+    width:14px; height:14px;
+    border-radius:50%;
+    background:#e8c090;
+    margin:0 auto;
+    border:1px solid #8a6a40;
+  }
+  .wr-body{
+    width:18px; height:20px;
+    background:#3b6ea5;
+    margin:0 auto;
+    border:1px solid #1e3a5f;
+  }
+  .wr-leg{
+    position:absolute;
+    bottom:0;
+    width:6px; height:16px;
+    background:#2b2620;
+  }
+  .wr-leg-l{left:2px;}
+  .wr-leg-r{right:2px;}
+  .wr-person.walking .wr-leg-l{animation:legSwing 0.4s infinite alternate;}
+  .wr-person.walking .wr-leg-r{animation:legSwing 0.4s infinite alternate-reverse;}
+  @keyframes legSwing{
+    0%{transform:rotate(-18deg); transform-origin:top;}
+    100%{transform:rotate(18deg); transform-origin:top;}
+  }
+  .wr-person.sitting{height:36px;}
+  .wr-person.sitting .wr-leg{height:8px;}
+  .wr-person.sitting .wr-body{height:14px;}
+  .wr-person.peering{transform:rotate(10deg);}
+  .wr-person.peering::after{
+    content:"";
+    position:absolute;
+    top:12px; left:20px;
+    width:11px; height:15px;
+    background:#fdfdf5;
+    border:1px solid #999;
+  }
+
+  @media (max-width: 620px){
+    .scene-row{flex-direction:column; align-items:center;}
+    .machine-col{padding-top:52px;}
+    .ticket-arrow{left:50%; transform:translateX(-50%) rotate(0deg);}
+    .ticket-arrow svg{transform:none;}
+  }
+
+  /* ---------- modal ---------- */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(20,24,32,0.55);
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:40px 20px;
+    overflow-y:auto;
+    z-index:100;
+    opacity:0;
+    visibility:hidden;
+    transition:opacity 0.25s ease, visibility 0s linear 0.25s;
+  }
+  .overlay.open{
+    opacity:1;
+    visibility:visible;
+    transition:opacity 0.25s ease;
+  }
+  .modal{
+    background:var(--card-bg);
+    border:1px solid var(--line-strong);
+    border-radius:3px;
+    max-width:520px;
+    width:100%;
+    padding:26px 26px 22px;
+    box-shadow:0 10px 40px var(--shadow);
+    transform:scale(0.92) translateY(10px);
+    transition:transform 0.3s cubic-bezier(.2,.8,.3,1);
+  }
+  .overlay.open .modal{transform:scale(1) translateY(0);}
+  .modal-top{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:4px;
+  }
+  .modal h2{font-size:1.3rem; font-weight:600;}
+  .modal .eyebrow{display:block; margin-bottom:6px;}
+  .close-x{
+    background:none; border:none; color:var(--ink-faint);
+    font-size:1.3rem; line-height:1; cursor:pointer; padding:4px;
+  }
+  .close-x:hover{color:var(--stamp);}
+  form.dossier{margin-top:16px; display:flex; flex-direction:column; gap:14px;}
+  .field label{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .field input, .field select, .field textarea{
+    width:100%;
+    font-family:'Work Sans', sans-serif;
+    font-size:0.95rem;
+    color:var(--ink);
+    background:var(--paper-raised);
+    border:1px solid var(--line-strong);
+    border-radius:2px;
+    padding:10px 12px;
+  }
+  .field textarea{min-height:110px; resize:vertical; font-family:inherit;}
+  .field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--focus); outline-offset:1px;}
+  .modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:4px;}
+  .hint{font-size:0.76rem; color:var(--ink-faint); margin-top:-6px;}
+  .hint.error{color:var(--stamp); font-weight:600;}
+
+  .suggest-box{
+    background:var(--stamp-soft);
+    border:1px dashed var(--stamp);
+    border-radius:2px;
+    padding:12px 14px;
+    margin-top:-2px;
+  }
+  .suggest-box p{margin:2px 0 10px; font-size:0.92rem;}
+  .suggest-box p strong{color:var(--stamp);}
+  .suggest-actions{display:flex; gap:8px; flex-wrap:wrap;}
+  .suggest-box .hint{margin-top:8px;}
+
+  /* honeypot: kept in the DOM and tabbable-looking to humans, off-screen so only bots that
+     auto-fill every field trip it */
+  .hp-field{
+    position:absolute;
+    left:-9999px;
+    top:auto;
+    width:1px;
+    height:1px;
+    overflow:hidden;
+  }
+
+  .success-panel{text-align:center; padding:8px 4px 4px;}
+  .success-panel p{color:var(--ink-soft); margin:10px 0 20px;}
+</style>
+
+<header class="site">
+  <div class="wrap">
+    <div class="wordmark"><span class="name">La Galère</span></div>
+    <a class="btn ghost" href="index.html">← Retour</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="guichet-scene paper-panel dog-ear">
+    <p class="eyebrow">Guichet des dossiers</p>
+    <h1 class="guichet-title">Prenez un ticket, on vous appelle.</h1>
+
+    <div class="scene-row">
+      <div class="machine-col">
+        <div class="ticket-arrow" aria-hidden="true">
+          <svg viewBox="0 0 60 60" width="46" height="46" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 10 C 20 8, 34 20, 30 42"/>
+            <path d="M20 38 L30 46 L38 34"/>
+          </svg>
+          <span class="handwritten">Cliquez ici !</span>
+        </div>
+        <div class="win98-machine" id="win98Machine">
+          <div class="win98-titlebar">
+            <span>GUICHET AUTOMATIQUE</span>
+            <span class="dots" aria-hidden="true"><span class="dot">_</span><span class="dot">×</span></span>
+          </div>
+          <div class="win98-body">
+            <div class="win98-screen">
+              <div class="led-label">Votre numéro</div>
+              <div class="led-display" id="ticketLed">PRÊT</div>
+            </div>
+            <button class="win98-button" id="ticketButton" type="button">Prendre un ticket</button>
+          </div>
+          <div class="ticket-slot" aria-hidden="true"></div>
+          <div class="ticket-paper" id="ticketPrint" aria-hidden="true"></div>
+        </div>
+        <p class="machine-note" id="machineNote" aria-live="polite"></p>
+      </div>
+
+      <div class="waitingroom-col">
+        <div class="waiting-room">
+          <div class="wr-board">
+            <span>En cours</span>
+            <span class="mono" id="queueNum">— — —</span>
+          </div>
+          <div class="wr-floor">
+            <div class="wr-status" id="wrStatus"></div>
+            <div class="wr-chair"></div>
+            <div class="wr-chair"></div>
+            <div class="wr-chair"></div>
+            <div class="wr-counter"></div>
+            <div class="wr-person" id="wrPerson" hidden>
+              <div class="wr-head"></div>
+              <div class="wr-body"></div>
+              <div class="wr-leg wr-leg-l"></div>
+              <div class="wr-leg wr-leg-r"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="overlay" id="overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div id="modalDefault">
+      <div class="modal-top">
+        <div>
+          <span class="eyebrow">Nouveau dossier</span>
+          <h2 id="modalTitle">Déposer votre galère</h2>
+        </div>
+        <button class="close-x" id="closeModal" type="button" aria-label="Fermer">&times;</button>
+      </div>
+      <form class="dossier" id="dossierForm">
+        <div class="field">
+          <label for="fTitle">Intitulé de votre galère</label>
+          <input id="fTitle" type="text" maxlength="90" required placeholder="Ex. : Un formulaire pour obtenir un formulaire">
+        </div>
+        <div class="field">
+          <label for="fBody">Racontez</label>
+          <textarea id="fBody" maxlength="600" required placeholder="Ce qui s'est passé, avec autant de détails absurdes que possible."></textarea>
+        </div>
+        <div class="suggest-box" id="suggestBox" hidden>
+          <span class="eyebrow">Thème suggéré</span>
+          <p>On pense qu'il s'agit de : <strong id="suggestCat"></strong></p>
+          <div class="suggest-actions">
+            <button type="button" class="btn small" id="suggestAccept">Oui, c'est ça</button>
+            <button type="button" class="btn ghost small" id="suggestReject">Non, je choisis</button>
+          </div>
+          <p class="hint">Suggestion basée sur des mots-clés dans votre texte, pas une vraie IA — vous pouvez toujours changer.</p>
+        </div>
+        <div class="field">
+          <label for="fCat">Administration concernée</label>
+          <select id="fCat" required></select>
+        </div>
+        <div class="field">
+          <label for="fName">Votre nom ou pseudo</label>
+          <input id="fName" type="text" maxlength="40" placeholder="Anonyme">
+          <p class="hint">Facultatif. Personne ne vous demandera de pièce justificative — pour une fois.</p>
+        </div>
+        <div class="field hp-field" aria-hidden="true">
+          <label for="fWebsite">Laissez ce champ vide</label>
+          <input id="fWebsite" name="fWebsite" type="text" tabindex="-1" autocomplete="off">
+        </div>
+        <p class="hint error" id="formError" hidden></p>
+        <div class="modal-actions">
+          <button type="button" class="btn ghost" id="cancelForm">Annuler</button>
+          <button type="submit" class="btn">Déposer le dossier</button>
+        </div>
+      </form>
+    </div>
+    <div id="modalSuccess" class="success-panel" hidden>
+      <span class="eyebrow">Dossier reçu</span>
+      <h2>Merci, c'est enregistré !</h2>
+      <p>Votre galère est maintenant dans la file, prête à être tamponnée par d'autres.</p>
+      <a class="btn" href="index.html">Retour à l'accueil</a>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var SUPABASE_URL = "https://kvyfnwnrujwbxlyxuwop.supabase.co";
+  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2eWZud25ydWp3YnhseXh1d29wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4Mzk5ODcsImV4cCI6MjEwMzQxNTk4N30.goWCeVFbEfVAQSDE3hkAt-DJhiTb9FTlYUOu6dlZTes";
+
+  var supabaseReady = SUPABASE_URL.indexOf("REPLACE_WITH") === -1 && SUPABASE_ANON_KEY.indexOf("REPLACE_WITH") === -1;
+  var sb = (supabaseReady && window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+  var CATEGORIES = [
+    "Impôts & fiscalité",
+    "CAF & prestations",
+    "Préfecture & titres de séjour",
+    "Sécu / CPAM",
+    "Emploi / France Travail",
+    "Mairie & état civil",
+    "Transport & permis",
+    "Logement",
+    "Autre"
+  ];
+
+  var KEYWORDS = {
+    "Impôts & fiscalité": ["impot","impots","fiscal","fiscalite","tresor public","avis d imposition","declaration de revenus","tva","prelevement a la source","dgfip","contribuable"],
+    "CAF & prestations": ["caf","allocation","allocataire","prime d activite","rsa"],
+    "Préfecture & titres de séjour": ["prefecture","titre de sejour","carte de sejour","visa","naturalisation","recepisse","sous-prefecture","regularisation"],
+    "Sécu / CPAM": ["securite sociale","cpam","carte vitale","remboursement","assurance maladie","arret de travail","secu"],
+    "Emploi / France Travail": ["pole emploi","france travail","chomage","actualisation","conseiller emploi","allocation chomage"],
+    "Mairie & état civil": ["mairie","etat civil","acte de naissance","acte de mariage","acte de deces","passeport","carte d identite","cni","recensement"],
+    "Transport & permis": ["carte grise","ants","permis de conduire","point de permis","points de permis","radar","immatriculation","controle technique"],
+    "Logement": ["apl","logement","bailleur","loyer","locataire","hlm","charges locatives","bail"]
+  };
+
+  function normalizeText(s){
+    return String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  }
+  function suggestCategory(text){
+    var norm = normalizeText(text);
+    var best = null, bestScore = 0;
+    Object.keys(KEYWORDS).forEach(function(cat){
+      var score = 0;
+      KEYWORDS[cat].forEach(function(kw){ if (norm.indexOf(kw) !== -1) score++; });
+      if (score > bestScore){ bestScore = score; best = cat; }
+    });
+    return bestScore > 0 ? best : null;
+  }
+
+  var LS_VOTER = "lagalere_voter_id";
+  function safeGet(key){
+    try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }
+    catch(e){ return null; }
+  }
+  function safeSet(key, val){
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){ /* ignore */ }
+  }
+  function getVoterId(){
+    var id = safeGet(LS_VOTER);
+    if (!id){
+      id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ("v" + Date.now() + Math.random().toString(16).slice(2));
+      safeSet(LS_VOTER, id);
+    }
+    return id;
+  }
+
+  var prefersReducedMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  var fCat = document.getElementById("fCat");
+  var fCatPlaceholder = document.createElement("option");
+  fCatPlaceholder.value = ""; fCatPlaceholder.textContent = "— à confirmer —";
+  fCatPlaceholder.disabled = true; fCatPlaceholder.selected = true;
+  fCat.appendChild(fCatPlaceholder);
+  CATEGORIES.forEach(function(c){
+    var o = document.createElement("option");
+    o.value = c; o.textContent = c;
+    fCat.appendChild(o);
+  });
+
+  /* ---------- modal ---------- */
+  var overlay = document.getElementById("overlay");
+  var modalDefault = document.getElementById("modalDefault");
+  var modalSuccess = document.getElementById("modalSuccess");
+  var dossierForm = document.getElementById("dossierForm");
+  var fTitle = document.getElementById("fTitle");
+  var fBody = document.getElementById("fBody");
+  var fName = document.getElementById("fName");
+  var fWebsite = document.getElementById("fWebsite");
+  var formError = document.getElementById("formError");
+  var suggestBox = document.getElementById("suggestBox");
+  var suggestCatEl = document.getElementById("suggestCat");
+  var suggestTimer = null;
+  var suggestionResolved = false;
+  var modalOpenedAt = 0;
+
+  function hideError(){ formError.hidden = true; formError.textContent = ""; }
+  function showError(msg){ formError.textContent = msg; formError.hidden = false; }
+
+  function updateSuggestion(){
+    if (suggestionResolved || fCat.value !== ""){ suggestBox.hidden = true; return; }
+    if (fBody.value.trim().length < 12){ suggestBox.hidden = true; return; }
+    var cat = suggestCategory(fTitle.value + " " + fBody.value);
+    if (cat){
+      suggestCatEl.textContent = cat;
+      suggestBox.hidden = false;
+    } else {
+      suggestBox.hidden = true;
+    }
+  }
+  function scheduleSuggestion(){
+    clearTimeout(suggestTimer);
+    suggestTimer = setTimeout(updateSuggestion, 450);
+  }
+  fTitle.addEventListener("input", scheduleSuggestion);
+  fBody.addEventListener("input", scheduleSuggestion);
+  document.getElementById("suggestAccept").addEventListener("click", function(){
+    fCat.value = suggestCatEl.textContent;
+    suggestionResolved = true;
+    suggestBox.hidden = true;
+  });
+  document.getElementById("suggestReject").addEventListener("click", function(){
+    suggestionResolved = true;
+    suggestBox.hidden = true;
+    fCat.focus();
+  });
+  fCat.addEventListener("change", function(){
+    suggestionResolved = true;
+    suggestBox.hidden = true;
+  });
+
+  function openModal(){
+    modalDefault.hidden = false;
+    modalSuccess.hidden = true;
+    overlay.classList.add("open");
+    modalOpenedAt = Date.now();
+    fTitle.focus();
+  }
+  function closeModal(){
+    overlay.classList.remove("open");
+    dossierForm.reset();
+    fCat.value = "";
+    suggestionResolved = false;
+    suggestBox.hidden = true;
+    hideError();
+  }
+  document.getElementById("closeModal").addEventListener("click", closeModal);
+  document.getElementById("cancelForm").addEventListener("click", closeModal);
+  overlay.addEventListener("click", function(e){ if (e.target === overlay) closeModal(); });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape" && overlay.classList.contains("open")) closeModal(); });
+
+  dossierForm.addEventListener("submit", async function(e){
+    e.preventDefault();
+    hideError();
+
+    /* honeypot: a real visitor never fills this hidden field */
+    if (fWebsite.value.trim() !== ""){
+      closeModal();
+      return;
+    }
+    /* a genuine person needs at least a couple of seconds to write something */
+    if (Date.now() - modalOpenedAt < 1500){
+      showError("Formulaire envoyé trop vite — réessayez, en prenant le temps de raconter.");
+      return;
+    }
+
+    var title = fTitle.value.trim();
+    var cat = fCat.value;
+    var body = fBody.value.trim();
+    var name = fName.value.trim() || "Anonyme";
+    if (!title || !cat || !body){
+      showError("Merci de remplir l'intitulé, le récit et de confirmer un thème.");
+      return;
+    }
+
+    var no = "N°" + String(new Date().getFullYear()).slice(-2) + "-" + String(Math.floor(Math.random()*90000)+10000);
+    var submitBtn = dossierForm.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+
+    if (!supabaseReady){
+      submitBtn.disabled = false;
+      modalDefault.hidden = true;
+      modalSuccess.hidden = false;
+      return;
+    }
+
+    try{
+      var res = await sb.from("dossiers").insert({ no:no, cat:cat, title:title, body:body, author:name }).select().single();
+      if (res.error) throw res.error;
+      /* vote for your own dossier once, so it doesn't show as un-tamponné to you */
+      await sb.from("votes").insert({ dossier_id: res.data.id, voter_id: getVoterId() });
+      submitBtn.disabled = false;
+      modalDefault.hidden = true;
+      modalSuccess.hidden = false;
+    } catch(err){
+      console.error("La Galère — échec de l'envoi :", err);
+      submitBtn.disabled = false;
+      showError("L'envoi a échoué. Vérifiez votre connexion et réessayez.");
+    }
+  });
+
+  /* ---------- ticket machine: fails a couple of times on purpose, then works ---------- */
+  var ticketLedEl = document.getElementById("ticketLed");
+  var ticketPaperEl = document.getElementById("ticketPrint");
+  var ticketButtonEl = document.getElementById("ticketButton");
+  var machineEl = document.getElementById("win98Machine");
+  var machineNoteEl = document.getElementById("machineNote");
+  var ticketBusy = false;
+  var ticketAttempts = 0;
+
+  var FAIL_MESSAGES = [
+    "Oups, réessayez.",
+    "Erreur du distributeur. Réessayez.",
+    "Ticket coincé. Réessayez."
+  ];
+
+  function randomTicketNum(){ return 480000 + Math.floor(Math.random() * 900); }
+  function fmtTicket(n){ return "N° " + String(n).padStart(6, "0"); }
+
+  function shakeMachine(){
+    machineEl.classList.remove("shake");
+    void machineEl.offsetWidth;
+    machineEl.classList.add("shake");
+  }
+
+  function dispenseTicket(){
+    if (ticketBusy) return;
+    ticketBusy = true;
+    ticketButtonEl.disabled = true;
+    ticketAttempts++;
+
+    if (ticketAttempts <= 2){
+      ticketLedEl.textContent = "ERREUR";
+      machineNoteEl.textContent = FAIL_MESSAGES[(ticketAttempts - 1) % FAIL_MESSAGES.length];
+      machineNoteEl.classList.add("fail");
+      shakeMachine();
+      setTimeout(function(){
+        ticketLedEl.textContent = "PRÊT";
+        ticketBusy = false;
+        ticketButtonEl.disabled = false;
+      }, prefersReducedMotion ? 50 : 900);
+      return;
+    }
+
+    machineNoteEl.textContent = "";
+    machineNoteEl.classList.remove("fail");
+
+    var userNum = randomTicketNum();
+    var finalStr = fmtTicket(userNum);
+
+    if (prefersReducedMotion){
+      ticketLedEl.textContent = finalStr;
+      ticketBusy = false;
+      ticketButtonEl.disabled = false;
+      openModal();
+      return;
+    }
+
+    ticketPaperEl.classList.remove("playing");
+    void ticketPaperEl.offsetWidth;
+    ticketPaperEl.style.opacity = "0";
+
+    var ticks = 0, maxTicks = 6;
+    var flicker = setInterval(function(){
+      ticketLedEl.textContent = fmtTicket(randomTicketNum());
+      ticks++;
+      if (ticks >= maxTicks){
+        clearInterval(flicker);
+        ticketLedEl.textContent = finalStr;
+        ticketPaperEl.innerHTML = finalStr + '<span class="stub">GUICHET AUTOMATIQUE</span>';
+        ticketPaperEl.classList.add("playing");
+        setTimeout(function(){
+          ticketBusy = false;
+          ticketButtonEl.disabled = false;
+          runWaitingRoom(userNum);
+        }, 500);
+      }
+    }, 80);
+  }
+  ticketButtonEl.addEventListener("click", dispenseTicket);
+
+  /* ---------- waiting room: sit, watch the queue, get called, walk up, then the form ---------- */
+  var queueNumEl = document.getElementById("queueNum");
+  var personEl = document.getElementById("wrPerson");
+  var wrStatusEl = document.getElementById("wrStatus");
+
+  function setStatus(msg){
+    wrStatusEl.textContent = msg;
+    wrStatusEl.classList.add("show");
+  }
+  function clearStatus(){
+    wrStatusEl.classList.remove("show");
+  }
+
+  function runWaitingRoom(userNum){
+    personEl.hidden = false;
+    personEl.className = "wr-person walking";
+    personEl.style.left = "-40px";
+    void personEl.offsetWidth;
+    personEl.style.left = "70px";
+
+    setTimeout(function(){
+      personEl.className = "wr-person sitting";
+      startQueueCountUp(userNum);
+    }, 1350);
+  }
+
+  function startQueueCountUp(userNum){
+    var current = userNum - (3 + Math.floor(Math.random() * 3));
+    queueNumEl.textContent = fmtTicket(current);
+    setStatus("En attente…");
+
+    var tick = setInterval(function(){
+      current++;
+      queueNumEl.textContent = fmtTicket(current);
+      if (current === userNum - 1){
+        setStatus("Presque…");
+      }
+      if (current >= userNum){
+        clearInterval(tick);
+        setStatus("C'est votre tour !");
+        setTimeout(walkToCounter, 750);
+      }
+    }, 650);
+  }
+
+  function walkToCounter(){
+    personEl.className = "wr-person walking";
+    personEl.style.left = "252px";
+    setTimeout(function(){
+      personEl.className = "wr-person peering";
+      clearStatus();
+      setTimeout(openModal, 900);
+    }, 1350);
+  }
+})();
+</script>

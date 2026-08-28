@@ -241,29 +241,6 @@
     font-size:1.06rem;
     color:var(--ink-soft);
   }
-  .stamp{
-    flex:none;
-    width:118px; height:118px;
-    border-radius:48% 52% 51% 49% / 53% 47% 53% 47%;
-    border:2.5px solid var(--stamp);
-    box-shadow: inset 0 0 0 4px var(--card-bg), inset 0 0 0 5px var(--stamp);
-    display:flex; align-items:center; justify-content:center;
-    transform:rotate(-11deg);
-    color:var(--stamp);
-    text-align:center;
-    padding:10px;
-  }
-  .stamp span{
-    display:block;
-    font-family:'IBM Plex Mono', monospace;
-    font-weight:600;
-    font-size:0.62rem;
-    letter-spacing:0.08em;
-    text-transform:uppercase;
-    line-height:1.4;
-  }
-  .stamp span.big{font-size:0.86rem; font-weight:700; margin:2px 0;}
-
   /* ---------- entry sign: points to the guichet page ---------- */
   .entry-sign{
     padding:30px 32px;
@@ -481,8 +458,6 @@
   @media (max-width: 560px){
     .stats{grid-template-columns:1fr 1fr;}
     .stat:nth-child(3){grid-column:1 / -1;}
-    .hero-top{flex-direction:column-reverse;}
-    .stamp{align-self:flex-end;}
   }
 
   .config-notice{
@@ -523,14 +498,8 @@
     </div>
     <div class="hero-top">
       <div>
-        <h1>Votre dossier n'avance pas.<br>Ici, au moins, il se <em>raconte</em>.</h1>
-        <p class="lede">La Galère recense, en toute liberté, les mésaventures des citoyens avec l'administration française. Pas d'algorithme qui classe, pas de ministère derrière : juste des gens qui écrivent, et d'autres qui tamponnent « vécu aussi ». Avant, ça finissait noyé dans un fil Reddit à minuit. Maintenant, ça a sa propre salle d'attente.</p>
-      </div>
-      <div class="stamp" aria-hidden="true">
-        <span>
-          <span class="big">DOSSIER</span>
-          REÇU &amp; CLASSÉ<br>SANS SUITE
-        </span>
+        <h1>Votre dossier n'avance pas&nbsp;? Vous n'êtes pas seul(e)&nbsp;!</h1>
+        <p class="lede">La Galère recense les mésaventures des citoyens avec l'administration française. N'attendez pas grand chose de ce site, si ce n'est de vous sentir écouté&nbsp;!</p>
       </div>
     </div>
   </section>

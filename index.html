@@ -331,7 +331,7 @@
     color:var(--paper-raised);
     border-color:var(--ink);
   }
-  select.filter{
+  select.filter, input.filter{
     font-family:'IBM Plex Mono', monospace;
     font-size:0.78rem;
     background:var(--card-bg);
@@ -339,6 +339,15 @@
     border:1px solid var(--line);
     border-radius:2px;
     padding:8px 10px;
+  }
+  .toolbar-filters{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  input.filter{
+    width:200px;
+    max-width:100%;
+  }
+  input.filter::placeholder{
+    color:var(--ink-faint);
+    font-family:'IBM Plex Mono', monospace;
   }
 
   /* ---------- feed ---------- */
@@ -562,9 +571,12 @@
       <button class="tab" id="sortVotes" role="tab" aria-pressed="true" type="button">Les plus tamponnées</button>
       <button class="tab" id="sortRecent" role="tab" aria-pressed="false" type="button">Les plus récentes</button>
     </div>
-    <select class="filter" id="filterCat" aria-label="Filtrer par administration">
-      <option value="">Toutes les administrations</option>
-    </select>
+    <div class="toolbar-filters">
+      <input type="search" class="filter" id="searchQuery" placeholder="Rechercher un dossier…" aria-label="Rechercher un dossier">
+      <select class="filter" id="filterCat" aria-label="Filtrer par administration">
+        <option value="">Toutes les administrations</option>
+      </select>
+    </div>
   </section>
 
   <section class="feed" id="feed" aria-live="polite">
@@ -659,12 +671,14 @@
 
   var sortMode = "votes";
   var filterCat = "";
+  var searchQuery = "";
 
   var feedEl = document.getElementById("feed");
   var statCount = document.getElementById("statCount");
   var statAdmins = document.getElementById("statAdmins");
   var statVotes = document.getElementById("statVotes");
   var filterSel = document.getElementById("filterCat");
+  var searchInput = document.getElementById("searchQuery");
   var sortVotesBtn = document.getElementById("sortVotes");
   var sortRecentBtn = document.getElementById("sortRecent");
 
@@ -686,9 +700,20 @@
     return d.toLocaleDateString("fr-FR", {day:"numeric", month:"short", year:"numeric"});
   }
 
+  /* accent-insensitive, case-insensitive matching for search */
+  function normalizeText(s){
+    return String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  }
+
   function render(){
     var list = dossiers.slice();
     if (filterCat) list = list.filter(function(d){ return d.cat === filterCat; });
+    if (searchQuery){
+      var q = normalizeText(searchQuery);
+      list = list.filter(function(d){
+        return normalizeText(d.title).indexOf(q) !== -1 || normalizeText(d.body).indexOf(q) !== -1;
+      });
+    }
     if (sortMode === "votes") list.sort(function(a,b){ return b.votes - a.votes; });
     else list.sort(function(a,b){ return a.date < b.date ? 1 : -1; });
 
@@ -701,7 +726,7 @@
     } else if (list.length === 0){
       var empty = document.createElement("div");
       empty.className = "empty";
-      empty.textContent = "Aucun dossier dans cette catégorie pour l'instant. Le premier, c'est peut-être vous.";
+      empty.textContent = (filterCat || searchQuery) ? "Aucun dossier ne correspond à cette recherche. Essayez un autre mot, ou une autre administration." : "Aucun dossier pour l'instant. Le premier, c'est peut-être vous.";
       feedEl.appendChild(empty);
     } else {
       list.forEach(function(d){
@@ -839,6 +864,16 @@
   filterSel.addEventListener("change", function(){
     filterCat = filterSel.value;
     render();
+  });
+
+  var searchDebounce = null;
+  searchInput.addEventListener("input", function(){
+    var val = searchInput.value;
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(function(){
+      searchQuery = val.trim();
+      render();
+    }, 250);
   });
 
 

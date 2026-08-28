@@ -693,6 +693,53 @@
     return bestScore > 0 ? best : null;
   }
 
+  /* ---------- lightweight client-side moderation ----------
+     Best-effort only: posting is fully anonymous with no accounts, so this is
+     a first filter against people accidentally (or not) publishing personal
+     details, or being straightforwardly insulting. Not a real moderation
+     pipeline — just a reasonable pass before the text goes public. */
+
+  var EMAIL_RE = /[a-z0-9][a-z0-9._%+-]*@[a-z0-9.-]+\.[a-z]{2,}/i;
+  /* French mobile/landline: 0X XX XX XX XX, with optional +33/0033 prefix and
+     optional space/dot/dash separators between pairs */
+  var PHONE_RE = /(?:(?:\+33|0033)[\s.-]?[1-9]|0[1-9])(?:[\s.-]?\d{2}){4}/;
+  /* number + common French street-type word — best effort, not perfect */
+  var ADDRESS_RE = /\b\d{1,4}\s?(?:bis|ter|quater)?\s+(?:rue|avenue|av|boulevard|bd|allee|impasse|chemin|route|quai|cours|square|lotissement|residence|villa|passage|sentier)\b/;
+
+  function detectPII(text){
+    if (EMAIL_RE.test(text)) return true;
+    if (PHONE_RE.test(text)) return true;
+    if (ADDRESS_RE.test(normalizeText(text))) return true;
+    return false;
+  }
+
+  /* Plain lowercase, accent-stripped words/stems (singular, plural, common
+     gender variants) — matched as whole words against the normalized text,
+     so it doesn't flag unrelated words that merely contain a stem (e.g.
+     "concert", "ordures ménagères"). Best-effort, not exhaustive. */
+  var INSULT_WORDS = [
+    "con","cons","conne","connard","connards","connasse","connasses",
+    "debile","debiles","cretin","cretine","cretins",
+    "imbecile","imbeciles","idiot","idiote","idiots",
+    "abruti","abrutie","abrutis","tare","taree","tares",
+    "batard","batards","batarde","batardes",
+    "enfoire","enfoiree","enfoires",
+    "encule","enculee","encules","enculer",
+    "salaud","salauds","salope","salopes",
+    "pute","putes","trouduc","trouducs",
+    "raclure","raclures","fdp","ntm",
+    "negre","negresse","negres","negro","negros",
+    "bougnoule","bougnoules","youpin","youpins",
+    "bicot","bicots","niakoue","niakoues",
+    "tapette","tapettes","gouine","gouines","pd"
+  ];
+  function detectInsult(text){
+    var norm = normalizeText(text);
+    return INSULT_WORDS.some(function(w){
+      return new RegExp("\\b" + w + "\\b", "i").test(norm);
+    });
+  }
+
   var LS_VOTER = "lagalere_voter_id";
   function safeGet(key){
     try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }
@@ -815,6 +862,16 @@
     var name = fName.value.trim() || "Anonyme";
     if (!title || !cat || !body){
       showError("Merci de remplir l'intitulé, le récit et de confirmer un thème.");
+      return;
+    }
+
+    var moderationText = title + " " + body + " " + name;
+    if (detectPII(moderationText)){
+      showError("Merci de ne pas partager de coordonnées personnelles (email, téléphone, adresse) — même les vôtres. Le guichet est public.");
+      return;
+    }
+    if (detectInsult(moderationText)){
+      showError("Merci de rester correct — reformulez sans insulte.");
       return;
     }
 

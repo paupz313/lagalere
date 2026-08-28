@@ -313,15 +313,6 @@
   }
   .ticket-print.playing{animation:ticketDispense 1.1s ease-out forwards;}
 
-  .queue-note{
-    font-family:'Caveat', cursive;
-    font-weight:600;
-    font-size:1.2rem;
-    color:var(--pen);
-    display:inline-block;
-    transform:rotate(-2deg);
-  }
-
   /* ---------- stats ---------- */
   .stats{
     padding:24px 28px;
@@ -623,9 +614,7 @@
   <div class="wrap">
     <div class="wordmark">
       <span class="name">La Galère</span>
-      <span class="tick mono">GUICHET N°1</span>
     </div>
-    <button class="btn" id="openFormTop" type="button">Raconter ma galère</button>
   </div>
 </header>
 
@@ -637,7 +626,6 @@
     </div>
     <div class="hero-top">
       <div>
-        <p class="eyebrow">Défouloir citoyen — pas un formulaire officiel</p>
         <h1>Votre dossier n'avance pas.<br>Ici, au moins, il se <em>raconte</em>.</h1>
         <p class="lede">La Galère recense, en toute liberté, les mésaventures des citoyens avec l'administration française. Pas d'algorithme qui classe, pas de ministère derrière : juste des gens qui écrivent, et d'autres qui tamponnent « vécu aussi ». Avant, ça finissait noyé dans un fil Reddit à minuit. Maintenant, ça a sa propre salle d'attente.</p>
       </div>
@@ -653,7 +641,6 @@
         <button class="ticket-btn" id="openFormHero" type="button">Prendre un ticket</button>
         <div class="ticket-print mono" id="ticketPrint" aria-hidden="true"></div>
       </div>
-      <span class="queue-note">aucune attente, contrairement à la vraie préfecture</span>
     </div>
   </section>
 
@@ -1094,7 +1081,6 @@
     suggestBox.hidden = true;
     hideError();
   }
-  document.getElementById("openFormTop").addEventListener("click", openModal);
   document.getElementById("closeModal").addEventListener("click", closeModal);
   document.getElementById("cancelForm").addEventListener("click", closeModal);
   overlay.addEventListener("click", function(e){ if (e.target === overlay) closeModal(); });

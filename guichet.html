@@ -175,7 +175,7 @@
   main.wrap{padding-top:26px; padding-bottom:60px;}
   .guichet-scene{padding:34px 32px; margin:0 0 30px;}
   .guichet-scene > .eyebrow{display:block; margin-bottom:8px;}
-  .guichet-title{font-size:1.7rem; max-width:22ch; margin-bottom:30px;}
+  .guichet-title{font-size:1.7rem; white-space:nowrap; margin-bottom:30px;}
   .scene-row{display:flex; gap:40px; align-items:flex-start; flex-wrap:wrap;}
   .machine-col{position:relative; flex:none; padding-top:44px;}
 
@@ -321,7 +321,7 @@
     color:var(--ink-faint);
   }
   .machine-note.fail{color:var(--stamp); font-weight:600;}
-  .machine-note.prompt{color:var(--ochre-text); font-weight:600;}
+  .machine-note.prompt{color:var(--ochre-text); font-weight:600; margin-top:48px;}
 
   /* ---------- waiting room: simple retro pixel scene ---------- */
   .waitingroom-col{flex:1; min-width:260px;}
@@ -494,6 +494,10 @@
     .machine-col{padding-top:52px;}
     .ticket-arrow{left:50%; transform:translateX(-50%) rotate(0deg);}
     .ticket-arrow svg{transform:none;}
+    .guichet-title{font-size:1.3rem;}
+  }
+  @media (max-width: 400px){
+    .guichet-title{font-size:1.1rem;}
   }
 
   /* ---------- modal ---------- */

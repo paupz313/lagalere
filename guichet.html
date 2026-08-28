@@ -275,36 +275,44 @@
   }
   .win98-button:disabled{color:#808080; cursor:default;}
   .ticket-slot{
-    height:5px;
+    height:8px;
     background:#000;
-    margin:8px 2px 0;
-    box-shadow:inset 0 1px 2px rgba(0,0,0,0.8);
+    margin:8px 10px 0;
+    border-radius:0 0 2px 2px;
+    box-shadow:inset 0 2px 3px rgba(0,0,0,0.75), inset 0 -1px 0 #333;
   }
+  /* ticket: a proper narrow vertical strip, torn edge at the bottom, that
+     gets visibly stuck halfway before the visitor clicks to pull it free */
   .ticket-paper{
     position:absolute;
     top:100%; left:50%;
-    width:170px;
-    transform:translate(-50%, -14px);
+    transform:translateX(-50%);
+    width:78px;
+    z-index:4;
+    opacity:0;
+    cursor:pointer;
+    clip-path:inset(0 0 100% 0);
+    transition:clip-path 0.4s ease;
+  }
+  .ticket-paper.show{opacity:1;}
+  .ticket-paper.stuck{clip-path:inset(0 0 74% 0);}
+  .ticket-paper.freed{clip-path:inset(0 0 0 0); transition:clip-path 0.4s cubic-bezier(.34,1.56,.64,1);}
+  .ticket-inner{
     background:#fdfdf5;
     color:#111;
     font-family:'IBM Plex Mono', monospace;
-    font-weight:700;
-    font-size:0.85rem;
     text-align:center;
-    padding:10px 8px 12px;
+    padding:12px 6px 0;
+    box-sizing:border-box;
     border-left:1px dashed #999;
     border-right:1px dashed #999;
     box-shadow:0 4px 10px rgba(0,0,0,0.4);
-    opacity:0;
-    z-index:4;
+    clip-path:polygon(0 0,100% 0,100% 90%,88% 100%,76% 90%,64% 100%,52% 90%,40% 100%,28% 90%,16% 100%,4% 90%,0 96%);
   }
-  .ticket-paper .stub{display:block; font-size:0.65rem; color:#777; margin-top:4px; letter-spacing:0.05em;}
-  .ticket-paper.playing{animation:ticketSlideOut 0.9s cubic-bezier(.25,0.05,.2,1) forwards;}
-  @keyframes ticketSlideOut{
-    0%{ transform:translate(-50%,-14px); opacity:0; }
-    12%{ opacity:1; }
-    100%{ transform:translate(-50%,38px); opacity:1; }
-  }
+  .ticket-inner .num-label{display:block; font-size:0.55rem; color:#999; letter-spacing:0.1em;}
+  .ticket-inner .num{display:block; font-weight:700; font-size:1.05rem; line-height:1.1; margin-top:2px;}
+  .ticket-inner .stub{display:block; font-size:0.5rem; color:#999; margin-top:10px; line-height:1.3; letter-spacing:0.03em; font-weight:400;}
+  .ticket-inner .tail{display:block; height:56px;}
   .machine-note{
     min-height:1.3em;
     margin:12px 2px 0;
@@ -313,6 +321,7 @@
     color:var(--ink-faint);
   }
   .machine-note.fail{color:var(--stamp); font-weight:600;}
+  .machine-note.prompt{color:var(--ochre-text); font-weight:600;}
 
   /* ---------- waiting room: simple retro pixel scene ---------- */
   .waitingroom-col{flex:1; min-width:260px;}
@@ -421,6 +430,64 @@
     background:#fdfdf5;
     border:1px solid #999;
   }
+  .wr-person.hopeful{transform:translateY(-3px);}
+  .wr-person.disappointed{transform:translateY(2px) rotate(4deg);}
+  .wr-person.sprawled{transform:rotate(14deg) translateX(6px);}
+  .wr-person.sprawled .wr-leg{transform:rotate(55deg); transform-origin:top;}
+  .wr-person.joyful{transform:translateY(-6px) rotate(-4deg);}
+
+  /* a plant that wilts during the long-wait beat */
+  .wr-plant{
+    position:absolute;
+    left:8px; bottom:8px;
+    width:16px; height:22px;
+    z-index:2;
+  }
+  .wr-plant::before{
+    content:"";
+    position:absolute; bottom:0; left:3px;
+    width:10px; height:8px;
+    background:#6b4a30;
+    border:1px solid #4a3320;
+  }
+  .wr-plant::after{
+    content:"";
+    position:absolute; bottom:6px; left:0;
+    width:16px; height:16px;
+    background:#5f8a52;
+    border-radius:60% 40% 55% 45%;
+    transition:all 0.9s ease;
+  }
+  .wr-plant.wilted::after{
+    background:#8a8a52;
+    height:6px; bottom:6px;
+    border-radius:0 0 50% 50%;
+    transform:translateY(4px) scaleY(0.5);
+  }
+
+  /* faint background crowd, present until the long-wait beat empties the room */
+  .wr-crowd{position:absolute; inset:0; pointer-events:none;}
+  .wr-bg-person{
+    position:absolute;
+    bottom:8px;
+    width:16px; height:34px;
+    opacity:0.5;
+    transition:opacity 1s ease;
+  }
+  .wr-bg-person::before{
+    content:"";
+    position:absolute; top:0; left:3px;
+    width:10px; height:10px;
+    border-radius:50%;
+    background:#7a8a76;
+  }
+  .wr-bg-person::after{
+    content:"";
+    position:absolute; top:11px; left:1px;
+    width:14px; height:16px;
+    background:#5b6b5b;
+  }
+  .wr-crowd.gone .wr-bg-person{opacity:0;}
 
   @media (max-width: 620px){
     .scene-row{flex-direction:column; align-items:center;}
@@ -558,7 +625,14 @@
             <button class="win98-button" id="ticketButton" type="button">Prendre un ticket</button>
           </div>
           <div class="ticket-slot" aria-hidden="true"></div>
-          <div class="ticket-paper" id="ticketPrint" aria-hidden="true"></div>
+          <div class="ticket-paper" id="ticketPrint" role="button" tabindex="0" aria-label="Tirer sur le ticket coincé">
+            <div class="ticket-inner">
+              <span class="num-label">N&deg;</span>
+              <span class="num" id="ticketNumSpan"></span>
+              <span class="stub">GUICHET AUTOMATIQUE</span>
+              <span class="tail"></span>
+            </div>
+          </div>
         </div>
         <p class="machine-note" id="machineNote" aria-live="polite"></p>
       </div>
@@ -571,6 +645,11 @@
           </div>
           <div class="wr-floor">
             <div class="wr-status" id="wrStatus"></div>
+            <div class="wr-plant" id="wrPlant" aria-hidden="true"></div>
+            <div class="wr-crowd" id="wrCrowd" aria-hidden="true">
+              <div class="wr-bg-person" style="left:20px;"></div>
+              <div class="wr-bg-person" style="left:140px;"></div>
+            </div>
             <div class="wr-chair"></div>
             <div class="wr-chair"></div>
             <div class="wr-chair"></div>
@@ -909,6 +988,8 @@
   var machineNoteEl = document.getElementById("machineNote");
   var ticketBusy = false;
   var ticketAttempts = 0;
+  var currentTicketUserNum = null;
+  var ticketNumSpanEl = document.getElementById("ticketNumSpan");
 
   var FAIL_MESSAGES = [
     "Oups, réessayez.",
@@ -958,9 +1039,8 @@
       return;
     }
 
-    ticketPaperEl.classList.remove("playing");
+    ticketPaperEl.classList.remove("show", "stuck", "freed");
     void ticketPaperEl.offsetWidth;
-    ticketPaperEl.style.opacity = "0";
 
     var ticks = 0, maxTicks = 6;
     var flicker = setInterval(function(){
@@ -969,22 +1049,45 @@
       if (ticks >= maxTicks){
         clearInterval(flicker);
         ticketLedEl.textContent = finalStr;
-        ticketPaperEl.innerHTML = finalStr + '<span class="stub">GUICHET AUTOMATIQUE</span>';
-        ticketPaperEl.classList.add("playing");
+        currentTicketUserNum = userNum;
+        ticketNumSpanEl.textContent = finalStr;
+        ticketPaperEl.classList.add("show");
+        requestAnimationFrame(function(){ ticketPaperEl.classList.add("stuck"); });
         setTimeout(function(){
-          ticketBusy = false;
-          ticketButtonEl.disabled = false;
-          runWaitingRoom(userNum);
-        }, 500);
+          machineNoteEl.textContent = "Oh non, il est coincé… tirez dessus !";
+          machineNoteEl.classList.remove("fail");
+          machineNoteEl.classList.add("prompt");
+        }, 450);
+        /* ticketBusy stays true and the button stays disabled: the ticket
+           is stuck until the visitor clicks it to pull it free */
       }
     }, 80);
   }
   ticketButtonEl.addEventListener("click", dispenseTicket);
 
+  function freeTicket(){
+    if (!ticketPaperEl.classList.contains("stuck")) return;
+    ticketPaperEl.classList.remove("stuck");
+    ticketPaperEl.classList.add("freed");
+    machineNoteEl.textContent = "";
+    machineNoteEl.classList.remove("prompt");
+    setTimeout(function(){
+      ticketBusy = false;
+      ticketButtonEl.disabled = false;
+      runWaitingRoom(currentTicketUserNum);
+    }, prefersReducedMotion ? 20 : 400);
+  }
+  ticketPaperEl.addEventListener("click", freeTicket);
+  ticketPaperEl.addEventListener("keydown", function(e){
+    if (e.key === "Enter" || e.key === " "){ e.preventDefault(); freeTicket(); }
+  });
+
   /* ---------- waiting room: sit, watch the queue, get called, walk up, then the form ---------- */
   var queueNumEl = document.getElementById("queueNum");
   var personEl = document.getElementById("wrPerson");
   var wrStatusEl = document.getElementById("wrStatus");
+  var wrPlantEl = document.getElementById("wrPlant");
+  var wrCrowdEl = document.getElementById("wrCrowd");
 
   function setStatus(msg){
     wrStatusEl.textContent = msg;
@@ -995,6 +1098,8 @@
   }
 
   function runWaitingRoom(userNum){
+    wrCrowdEl.classList.remove("gone");
+    wrPlantEl.classList.remove("wilted");
     personEl.hidden = false;
     personEl.className = "wr-person walking";
     personEl.style.left = "-40px";
@@ -1008,22 +1113,57 @@
   }
 
   function startQueueCountUp(userNum){
-    var current = userNum - (3 + Math.floor(Math.random() * 3));
+    var current = userNum - (9 + Math.floor(Math.random() * 4));
     queueNumEl.textContent = fmtTicket(current);
     setStatus("En attente…");
 
-    var tick = setInterval(function(){
+    /* a decoy call before the real one — hope, then letdown */
+    var falseCallAt = userNum - (4 + Math.floor(Math.random() * 3));
+    /* a beat conveying a long wait: room empties, plant wilts, slump */
+    var longWaitAt = userNum - 2;
+
+    function step(){
       current++;
       queueNumEl.textContent = fmtTicket(current);
+
+      if (current === falseCallAt){
+        personEl.className = "wr-person sitting hopeful";
+        setStatus("On appelle un numéro… c'est peut-être moi ?");
+        setTimeout(function(){
+          personEl.className = "wr-person sitting disappointed";
+          setStatus("Ah non… pas moi.");
+          setTimeout(function(){
+            personEl.className = "wr-person sitting";
+            setTimeout(step, 650);
+          }, 1100);
+        }, 1100);
+        return;
+      }
+
+      if (current === longWaitAt){
+        setStatus("Le temps passe…");
+        wrCrowdEl.classList.add("gone");
+        wrPlantEl.classList.add("wilted");
+        personEl.className = "wr-person sprawled";
+        setTimeout(function(){
+          personEl.className = "wr-person sitting";
+          setTimeout(step, 650);
+        }, 1700);
+        return;
+      }
+
       if (current === userNum - 1){
         setStatus("Presque…");
       }
       if (current >= userNum){
-        clearInterval(tick);
+        personEl.className = "wr-person sitting joyful";
         setStatus("C'est votre tour !");
         setTimeout(walkToCounter, 750);
+        return;
       }
-    }, 650);
+      setTimeout(step, 650);
+    }
+    setTimeout(step, 650);
   }
 
   function walkToCounter(){

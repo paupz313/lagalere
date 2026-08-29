@@ -9,10 +9,27 @@
 <title>La Galère — Guichet</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
 
 <style>
-  /* ---------- tokens: gouv.fr-inspired (Bleu France / Rouge Marianne), same as index.html ---------- */
+  /* ---------- Marianne: the DSFR (gouv.fr) typeface, self-hosted from the official
+     open-source @gouvfr/dsfr package (Licence Ouverte) — same font as hauts-de-seine.gouv.fr.
+     Not used inside the retro win98 ticket machine, which keeps its own Tahoma/mono pastiche. ---------- */
+  @font-face{
+    font-family:"Marianne"; font-style:normal; font-weight:400; font-display:swap;
+    src:url("https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.15.2/dist/fonts/Marianne-Regular.woff2") format("woff2");
+  }
+  @font-face{
+    font-family:"Marianne"; font-style:normal; font-weight:500; font-display:swap;
+    src:url("https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.15.2/dist/fonts/Marianne-Medium.woff2") format("woff2");
+  }
+  @font-face{
+    font-family:"Marianne"; font-style:normal; font-weight:700; font-display:swap;
+    src:url("https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.15.2/dist/fonts/Marianne-Bold.woff2") format("woff2");
+  }
+
+  /* ---------- tokens: exact DSFR values (Bleu France / Rouge Marianne), same as index.html,
+     matched against hauts-de-seine.gouv.fr's own CSS custom properties ---------- */
   :root{
     --paper: #FFFFFF;
     --paper-raised: #F6F6F6;
@@ -21,58 +38,58 @@
     --ink-faint: #666666;
     --blue: #000091;
     --blue-hover: #1212FF;
-    --blue-soft: rgba(0,0,145,0.06);
+    --blue-soft: #E3E3FD;
     --stamp: #E1000F;
-    --stamp-soft: rgba(225,0,15,0.08);
+    --stamp-soft: #FEE9E9;
     --ochre: #929292;
     --ochre-text: #3A3A3A;
     --pen: #000091;
     --line: #DDDDDD;
-    --line-strong: #929292;
+    --line-strong: #3A3A3A;
     --card-bg: #FFFFFF;
-    --focus: #0A76F6;
+    --focus: #2A7FFE;
     --shadow: rgba(0,0,0,0.08);
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
       --paper: #161616;
       --paper-raised: #1E1E1E;
-      --ink: #F6F6F6;
-      --ink-soft: #C7C7C7;
-      --ink-faint: #9C9C9C;
+      --ink: #FFFFFF;
+      --ink-soft: #CECECE;
+      --ink-faint: #929292;
       --blue: #8585F6;
-      --blue-hover: #ADADFF;
-      --blue-soft: rgba(133,133,246,0.14);
-      --stamp: #FF6564;
-      --stamp-soft: rgba(255,101,100,0.14);
+      --blue-hover: #B1B1F9;
+      --blue-soft: #272747;
+      --stamp: #FF5655;
+      --stamp-soft: #331F1F;
       --ochre: #545454;
-      --ochre-text: #C7C7C7;
+      --ochre-text: #CECECE;
       --pen: #8585F6;
-      --line: #3A3A3A;
-      --line-strong: #545454;
+      --line: #353535;
+      --line-strong: #CECECE;
       --card-bg: #1E1E1E;
-      --focus: #8585F6;
+      --focus: #2A7FFE;
       --shadow: rgba(0,0,0,0.5);
     }
   }
   :root[data-theme="dark"]{
     --paper: #161616;
     --paper-raised: #1E1E1E;
-    --ink: #F6F6F6;
-    --ink-soft: #C7C7C7;
-    --ink-faint: #9C9C9C;
+    --ink: #FFFFFF;
+    --ink-soft: #CECECE;
+    --ink-faint: #929292;
     --blue: #8585F6;
-    --blue-hover: #ADADFF;
-    --blue-soft: rgba(133,133,246,0.14);
-    --stamp: #FF6564;
-    --stamp-soft: rgba(255,101,100,0.14);
+    --blue-hover: #B1B1F9;
+    --blue-soft: #272747;
+    --stamp: #FF5655;
+    --stamp-soft: #331F1F;
     --ochre: #545454;
-    --ochre-text: #C7C7C7;
+    --ochre-text: #CECECE;
     --pen: #8585F6;
-    --line: #3A3A3A;
-    --line-strong: #545454;
+    --line: #353535;
+    --line-strong: #CECECE;
     --card-bg: #1E1E1E;
-    --focus: #8585F6;
+    --focus: #2A7FFE;
     --shadow: rgba(0,0,0,0.5);
   }
 
@@ -82,7 +99,7 @@
     margin:0;
     background:var(--paper);
     color:var(--ink);
-    font-family:'Work Sans', ui-sans-serif, system-ui, sans-serif;
+    font-family:'Marianne', arial, sans-serif;
     font-size:16px;
     line-height:1.55;
   }
@@ -95,7 +112,7 @@
     *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
   }
   h1,h2,h3{
-    font-family:'Work Sans', ui-sans-serif, system-ui, sans-serif;
+    font-family:'Marianne', arial, sans-serif;
     text-wrap:balance;
     margin:0;
     color:var(--ink);
@@ -131,12 +148,12 @@
     display:flex; align-items:center; justify-content:space-between; gap:16px;
   }
   .wordmark .name{
-    font-weight:800;
+    font-weight:700;
     font-size:1.35rem;
     letter-spacing:-0.01em;
   }
   .btn{
-    font-weight:600;
+    font-weight:700;
     font-size:0.92rem;
     border:1px solid var(--blue);
     background:var(--blue);
@@ -312,8 +329,8 @@
     font-size:0.82rem;
     color:var(--ink-faint);
   }
-  .machine-note.fail{color:var(--stamp); font-weight:600;}
-  .machine-note.prompt{color:var(--ochre-text); font-weight:600; margin-top:48px;}
+  .machine-note.fail{color:var(--stamp); font-weight:700;}
+  .machine-note.prompt{color:var(--ochre-text); font-weight:700; margin-top:48px;}
 
   /* ---------- waiting room: simple retro pixel scene ---------- */
   .waitingroom-col{flex:1; min-width:260px;}
@@ -537,7 +554,7 @@
     display:flex; align-items:center; justify-content:space-between;
     margin-bottom:4px;
   }
-  .modal h2{font-size:1.3rem; font-weight:600;}
+  .modal h2{font-size:1.3rem; font-weight:700;}
   .modal .eyebrow{display:block; margin-bottom:6px;}
   .close-x{
     background:none; border:none; color:var(--ink-faint);
@@ -548,7 +565,7 @@
   .field label{
     display:block;
     font-size:0.72rem;
-    font-weight:600;
+    font-weight:700;
     letter-spacing:0.04em;
     text-transform:uppercase;
     color:var(--ink-soft);
@@ -568,7 +585,7 @@
   .field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--focus); outline-offset:1px;}
   .modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:4px;}
   .hint{font-size:0.76rem; color:var(--ink-faint); margin:6px 0 0;}
-  .hint.error{color:var(--stamp); font-weight:600;}
+  .hint.error{color:var(--stamp); font-weight:700;}
 
   .suggest-box{
     background:var(--blue-soft);
@@ -1011,6 +1028,7 @@
 
   function randomTicketNum(){ return 480000 + Math.floor(Math.random() * 900); }
   function fmtTicket(n){ return "N° " + String(n).padStart(6, "0"); }
+  function fmtTicketVertical(n){ return String(n).padStart(6, "0").split("").join("<br>"); }
 
   function shakeMachine(){
     machineEl.classList.remove("shake");
@@ -1062,7 +1080,7 @@
         clearInterval(flicker);
         ticketLedEl.textContent = finalStr;
         currentTicketUserNum = userNum;
-        ticketNumSpanEl.textContent = finalStr;
+        ticketNumSpanEl.innerHTML = fmtTicketVertical(userNum);
         ticketPaperEl.classList.add("show");
         requestAnimationFrame(function(){ ticketPaperEl.classList.add("stuck"); });
         setTimeout(function(){

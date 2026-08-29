@@ -10,12 +10,24 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>La Galère</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
 <style>
-  /* ---------- tokens: gouv.fr-inspired (Bleu France / Rouge Marianne) ---------- */
+  /* ---------- Marianne: the DSFR (gouv.fr) typeface, self-hosted from the official
+     open-source @gouvfr/dsfr package (Licence Ouverte) — same font as hauts-de-seine.gouv.fr ---------- */
+  @font-face{
+    font-family:"Marianne"; font-style:normal; font-weight:400; font-display:swap;
+    src:url("https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.15.2/dist/fonts/Marianne-Regular.woff2") format("woff2");
+  }
+  @font-face{
+    font-family:"Marianne"; font-style:normal; font-weight:500; font-display:swap;
+    src:url("https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.15.2/dist/fonts/Marianne-Medium.woff2") format("woff2");
+  }
+  @font-face{
+    font-family:"Marianne"; font-style:normal; font-weight:700; font-display:swap;
+    src:url("https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.15.2/dist/fonts/Marianne-Bold.woff2") format("woff2");
+  }
+
+  /* ---------- tokens: exact DSFR values (Bleu France / Rouge Marianne), matched against
+     hauts-de-seine.gouv.fr's own CSS custom properties in both light and dark ---------- */
   :root{
     --paper: #FFFFFF;
     --paper-raised: #F6F6F6;
@@ -24,55 +36,58 @@
     --ink-faint: #666666;
     --blue: #000091;
     --blue-hover: #1212FF;
+    --blue-soft: #E3E3FD;
     --stamp: #E1000F;
-    --stamp-soft: rgba(225,0,15,0.08);
+    --stamp-soft: #FEE9E9;
     --ochre: #929292;
     --ochre-text: #3A3A3A;
     --pen: #000091;
     --line: #DDDDDD;
-    --line-strong: #929292;
+    --line-strong: #3A3A3A;
     --card-bg: #FFFFFF;
-    --focus: #0A76F6;
+    --focus: #2A7FFE;
     --shadow: rgba(0,0,0,0.08);
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
       --paper: #161616;
       --paper-raised: #1E1E1E;
-      --ink: #F6F6F6;
-      --ink-soft: #C7C7C7;
-      --ink-faint: #9C9C9C;
+      --ink: #FFFFFF;
+      --ink-soft: #CECECE;
+      --ink-faint: #929292;
       --blue: #8585F6;
-      --blue-hover: #ADADFF;
-      --stamp: #FF6564;
-      --stamp-soft: rgba(255,101,100,0.14);
+      --blue-hover: #B1B1F9;
+      --blue-soft: #272747;
+      --stamp: #FF5655;
+      --stamp-soft: #331F1F;
       --ochre: #545454;
-      --ochre-text: #C7C7C7;
+      --ochre-text: #CECECE;
       --pen: #8585F6;
-      --line: #3A3A3A;
-      --line-strong: #545454;
+      --line: #353535;
+      --line-strong: #CECECE;
       --card-bg: #1E1E1E;
-      --focus: #8585F6;
+      --focus: #2A7FFE;
       --shadow: rgba(0,0,0,0.5);
     }
   }
   :root[data-theme="dark"]{
     --paper: #161616;
     --paper-raised: #1E1E1E;
-    --ink: #F6F6F6;
-    --ink-soft: #C7C7C7;
-    --ink-faint: #9C9C9C;
+    --ink: #FFFFFF;
+    --ink-soft: #CECECE;
+    --ink-faint: #929292;
     --blue: #8585F6;
-    --blue-hover: #ADADFF;
-    --stamp: #FF6564;
-    --stamp-soft: rgba(255,101,100,0.14);
+    --blue-hover: #B1B1F9;
+    --blue-soft: #272747;
+    --stamp: #FF5655;
+    --stamp-soft: #331F1F;
     --ochre: #545454;
-    --ochre-text: #C7C7C7;
+    --ochre-text: #CECECE;
     --pen: #8585F6;
-    --line: #3A3A3A;
-    --line-strong: #545454;
+    --line: #353535;
+    --line-strong: #CECECE;
     --card-bg: #1E1E1E;
-    --focus: #8585F6;
+    --focus: #2A7FFE;
     --shadow: rgba(0,0,0,0.5);
   }
 
@@ -82,20 +97,20 @@
     margin:0;
     background:var(--paper);
     color:var(--ink);
-    font-family:'Work Sans', ui-sans-serif, system-ui, sans-serif;
+    font-family:'Marianne', arial, sans-serif;
     font-size:16px;
     line-height:1.55;
   }
   .handwritten{
     font-family:inherit;
     color:var(--pen);
-    font-weight:600;
+    font-weight:700;
   }
   @media (prefers-reduced-motion: reduce){
     *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
   }
   h1,h2,h3{
-    font-family:'Work Sans', ui-sans-serif, system-ui, sans-serif;
+    font-family:'Marianne', arial, sans-serif;
     text-wrap:balance;
     margin:0;
     color:var(--ink);
@@ -135,7 +150,7 @@
     display:flex; align-items:baseline; gap:10px;
   }
   .wordmark .name{
-    font-weight:800;
+    font-weight:700;
     font-size:1.35rem;
     letter-spacing:-0.01em;
   }
@@ -147,7 +162,7 @@
     padding:2px 6px;
   }
   .btn{
-    font-weight:600;
+    font-weight:700;
     font-size:0.92rem;
     border:1px solid var(--blue);
     background:var(--blue);
@@ -178,7 +193,7 @@
     background:var(--paper-raised);
     color:var(--ink);
     border-left:4px solid var(--blue);
-    font-weight:600;
+    font-weight:700;
     font-size:1rem;
     line-height:1.4;
     padding:12px 16px;
@@ -219,7 +234,7 @@
     flex:none;
     color:var(--ink-soft);
   }
-  .entry-copy h2{font-size:1.4rem; font-weight:600; margin:6px 0 8px;}
+  .entry-copy h2{font-size:1.4rem; font-weight:700; margin:6px 0 8px;}
   .entry-copy p{color:var(--ink-soft); max-width:46ch; margin:0 0 16px;}
   .entry-copy .eyebrow{color:var(--blue);}
   .entry-copy .btn{display:inline-flex; align-items:center; gap:8px;}
@@ -251,12 +266,13 @@
   /* ---------- toolbar ---------- */
   .toolbar{
     padding:26px 0 14px;
-    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    display:flex; flex-direction:column; gap:12px;
   }
-  .tabs{display:flex; gap:6px;}
+  .toolbar-top{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+  .tabs{display:flex; gap:6px; flex-wrap:wrap;}
   .tab{
     font-size:0.78rem;
-    font-weight:600;
+    font-weight:700;
     letter-spacing:0.03em;
     text-transform:uppercase;
     background:transparent;
@@ -283,8 +299,7 @@
     padding:8px 10px;
     vertical-align:middle;
   }
-  .toolbar-filters{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
-  .search-wrap{position:relative; width:200px; max-width:100%;}
+  .search-wrap{position:relative; width:220px; max-width:100%; flex:0 1 220px;}
   .search-wrap svg{
     position:absolute;
     left:10px; top:50%;
@@ -319,7 +334,7 @@
   }
   .tag{
     font-size:0.68rem;
-    font-weight:600;
+    font-weight:700;
     letter-spacing:0.05em;
     text-transform:uppercase;
     color:var(--ochre-text);
@@ -334,7 +349,7 @@
   }
   .card h3{
     font-size:1.24rem;
-    font-weight:600;
+    font-weight:700;
     line-height:1.28;
     margin-bottom:8px;
   }
@@ -352,12 +367,25 @@
     font-size:0.82rem;
     color:var(--ink-faint);
   }
+  .mine-tag{
+    display:inline-block;
+    background:var(--blue);
+    color:#FFFFFF;
+    font-size:0.68rem;
+    font-weight:700;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    border-radius:2px;
+    padding:1px 6px;
+    margin-left:4px;
+    vertical-align:1px;
+  }
   .vote-btn{
     display:flex; align-items:center; gap:8px;
     background:transparent;
     border:1px solid var(--line-strong);
     color:var(--ink);
-    font-weight:600;
+    font-weight:700;
     font-size:0.85rem;
     padding:8px 12px;
     border-radius:2px;
@@ -383,7 +411,7 @@
     padding:38px 32px;
     margin:0 0 30px;
   }
-  .about h2{font-size:1.5rem; font-weight:600; margin-bottom:14px;}
+  .about h2{font-size:1.5rem; font-weight:700; margin-bottom:14px;}
   .about p{color:var(--ink-soft); max-width:62ch; margin:0 0 12px; position:relative;}
   .about .eyebrow{color:var(--blue);}
 
@@ -502,11 +530,12 @@
   </section>
 
   <section class="toolbar">
-    <div class="tabs" role="tablist" aria-label="Trier">
-      <button class="tab" id="sortVotes" role="tab" aria-pressed="true" type="button">Les plus tamponnées</button>
-      <button class="tab" id="sortRecent" role="tab" aria-pressed="false" type="button">Les plus récentes</button>
-    </div>
-    <div class="toolbar-filters">
+    <div class="toolbar-top">
+      <div class="tabs" role="tablist" aria-label="Trier">
+        <button class="tab" id="sortVotes" role="tab" aria-pressed="true" type="button">Les plus tamponnées</button>
+        <button class="tab" id="sortRecent" role="tab" aria-pressed="false" type="button">Les plus récentes</button>
+      </div>
+      <button class="tab filter-mine" id="filterMine" aria-pressed="false" type="button">Mes galères</button>
       <div class="search-wrap">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
           <circle cx="11" cy="11" r="7"/>
@@ -514,10 +543,10 @@
         </svg>
         <input type="search" class="filter" id="searchQuery" placeholder="Rechercher un dossier…" aria-label="Rechercher un dossier">
       </div>
-      <select class="filter" id="filterCat" aria-label="Filtrer par administration">
-        <option value="">Toutes les administrations</option>
-      </select>
     </div>
+    <select class="filter" id="filterCat" aria-label="Filtrer par administration">
+      <option value="">Toutes les administrations</option>
+    </select>
   </section>
 
   <section class="feed" id="feed" aria-live="polite">
@@ -596,7 +625,31 @@
     try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){ /* ignore */ }
   }
 
+  /* Every visitor gets a silent, credential-free Supabase session (no email,
+     no password, no visible sign-in step) — this is what lets a dossier/vote
+     be tied to a stable identity (for "mes galères" and server-side anti-bot
+     rate limits) without any login UI. Falls back to a local-only id in
+     demo mode (no Supabase configured). */
+  var currentUserId = null;
+  async function ensureSession(){
+    if (!sb) return null;
+    try{
+      var sess = await sb.auth.getSession();
+      var user = sess.data && sess.data.session && sess.data.session.user;
+      if (!user){
+        var signIn = await sb.auth.signInAnonymously();
+        if (signIn.error) throw signIn.error;
+        user = signIn.data && signIn.data.user;
+      }
+      currentUserId = user ? user.id : null;
+    } catch(err){
+      console.error("La Galère — échec de la connexion anonyme :", err);
+    }
+    return currentUserId;
+  }
+
   function getVoterId(){
+    if (currentUserId) return currentUserId;
     var id = safeGet(LS_VOTER);
     if (!id){
       id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ("v" + Date.now() + Math.random().toString(16).slice(2));
@@ -612,6 +665,7 @@
   var sortMode = "votes";
   var filterCat = "";
   var searchQuery = "";
+  var filterMine = false;
 
   var feedEl = document.getElementById("feed");
   var statCount = document.getElementById("statCount");
@@ -621,6 +675,7 @@
   var searchInput = document.getElementById("searchQuery");
   var sortVotesBtn = document.getElementById("sortVotes");
   var sortRecentBtn = document.getElementById("sortRecent");
+  var filterMineBtn = document.getElementById("filterMine");
 
   CATEGORIES.forEach(function(c){
     var o = document.createElement("option");
@@ -647,6 +702,7 @@
 
   function render(){
     var list = dossiers.slice();
+    if (filterMine) list = list.filter(function(d){ return currentUserId && d.user_id === currentUserId; });
     if (filterCat) list = list.filter(function(d){ return d.cat === filterCat; });
     if (searchQuery){
       var q = normalizeText(searchQuery);
@@ -666,13 +722,14 @@
     } else if (list.length === 0){
       var empty = document.createElement("div");
       empty.className = "empty";
-      empty.textContent = (filterCat || searchQuery) ? "Aucun dossier ne correspond à cette recherche. Essayez un autre mot, ou une autre administration." : "Aucun dossier pour l'instant. Le premier, c'est peut-être vous.";
+      empty.textContent = filterMine ? "Vous n'avez pas encore déposé de dossier." : (filterCat || searchQuery) ? "Aucun dossier ne correspond à cette recherche. Essayez un autre mot, ou une autre administration." : "Aucun dossier pour l'instant. Le premier, c'est peut-être vous.";
       feedEl.appendChild(empty);
     } else {
       list.forEach(function(d){
         var card = document.createElement("article");
         card.className = "card";
         var isVoted = !!voted[d.id];
+        var isMine = !!(currentUserId && d.user_id === currentUserId);
         card.innerHTML =
           '<div class="card-top">' +
             '<span class="tag">' + escapeHtml(d.cat) + '</span>' +
@@ -681,7 +738,7 @@
           '<h3>' + escapeHtml(d.title) + '</h3>' +
           '<p class="body">' + escapeHtml(d.body) + '</p>' +
           '<div class="card-bottom">' +
-            '<span class="byline">' + escapeHtml(d.author || "Anonyme") + ' — ' + formatDate(d.date) + '</span>' +
+            '<span class="byline">' + escapeHtml(d.author || "Anonyme") + ' — ' + formatDate(d.date) + (isMine ? ' <span class="mine-tag">Vous</span>' : '') + '</span>' +
             '<button type="button" class="vote-btn' + (isVoted ? ' voted' : '') + '" data-id="' + d.id + '"' + (isVoted ? ' disabled' : '') + '>' +
               (isVoted ? '✓ Tamponné' : 'Vécu aussi') + ' <span class="count mono">' + d.votes + '</span>' +
             '</button>' +
@@ -731,6 +788,7 @@
           title: d.title,
           body: d.body,
           author: d.author,
+          user_id: d.user_id,
           votes: votesMap[d.id] || 0
         };
       });
@@ -815,8 +873,14 @@
       render();
     }, 250);
   });
+  if (filterMineBtn){
+    filterMineBtn.addEventListener("click", function(){
+      filterMine = !filterMine;
+      filterMineBtn.setAttribute("aria-pressed", String(filterMine));
+      render();
+    });
+  }
 
-
-  loadDossiers();
+  ensureSession().then(loadDossiers);
 })();
 </script>

@@ -854,7 +854,29 @@
   function safeSet(key, val){
     try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){ /* ignore */ }
   }
+
+  /* Same silent, credential-free anonymous session as index.html — see the
+     comment there. Kicked off immediately; the submit handler awaits it. */
+  var currentUserId = null;
+  var sessionPromise = (async function ensureSession(){
+    if (!sb) return null;
+    try{
+      var sess = await sb.auth.getSession();
+      var user = sess.data && sess.data.session && sess.data.session.user;
+      if (!user){
+        var signIn = await sb.auth.signInAnonymously();
+        if (signIn.error) throw signIn.error;
+        user = signIn.data && signIn.data.user;
+      }
+      currentUserId = user ? user.id : null;
+    } catch(err){
+      console.error("La Galère — échec de la connexion anonyme :", err);
+    }
+    return currentUserId;
+  })();
+
   function getVoterId(){
+    if (currentUserId) return currentUserId;
     var id = safeGet(LS_VOTER);
     if (!id){
       id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ("v" + Date.now() + Math.random().toString(16).slice(2));
@@ -993,7 +1015,8 @@
     }
 
     try{
-      var res = await sb.from("dossiers").insert({ no:no, cat:cat, title:title, body:body, author:name }).select().single();
+      await sessionPromise;
+      var res = await sb.from("dossiers").insert({ no:no, cat:cat, title:title, body:body, author:name, user_id:currentUserId }).select().single();
       if (res.error) throw res.error;
       /* vote for your own dossier once, so it doesn't show as un-tamponné to you */
       await sb.from("votes").insert({ dossier_id: res.data.id, voter_id: getVoterId() });

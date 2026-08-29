@@ -12,67 +12,67 @@
 <title>La Galère</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
-  /* ---------- tokens ---------- */
+  /* ---------- tokens: gouv.fr-inspired (Bleu France / Rouge Marianne) ---------- */
   :root{
-    --paper: #FAF8F1;
-    --paper-raised: #FFFFFF;
-    --grain: rgba(150,130,90,0.05);
-    --ink: #2B2620;
-    --ink-soft: #6B6255;
-    --ink-faint: #9A9282;
-    --stamp: #C0392B;
-    --stamp-soft: rgba(192,57,43,0.10);
-    --ochre: #C68A2E;
-    --ochre-text: #8C5F17;
-    --tape: #E4C08A;
-    --pen: #2F5FA3;
-    --line: #E7E0D0;
-    --line-strong: #D2C7AC;
+    --paper: #FFFFFF;
+    --paper-raised: #F6F6F6;
+    --ink: #161616;
+    --ink-soft: #3A3A3A;
+    --ink-faint: #666666;
+    --blue: #000091;
+    --blue-hover: #1212FF;
+    --stamp: #E1000F;
+    --stamp-soft: rgba(225,0,15,0.08);
+    --ochre: #929292;
+    --ochre-text: #3A3A3A;
+    --pen: #000091;
+    --line: #DDDDDD;
+    --line-strong: #929292;
     --card-bg: #FFFFFF;
-    --focus: #2B6CB0;
-    --shadow: rgba(60,48,28,0.12);
+    --focus: #0A76F6;
+    --shadow: rgba(0,0,0,0.08);
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
-      --paper: #1C1814;
-      --paper-raised: #241F19;
-      --grain: rgba(230,190,120,0.035);
-      --ink: #F1E9DA;
-      --ink-soft: #C9BCA4;
-      --ink-faint: #8F8570;
-      --stamp: #E2725B;
-      --stamp-soft: rgba(226,114,91,0.16);
-      --ochre: #E0AE5C;
-      --ochre-text: #E0AE5C;
-      --tape: #6B5B3C;
-      --pen: #8FB4E0;
-      --line: #3A332A;
-      --line-strong: #4E4534;
-      --card-bg: #241F19;
-      --focus: #7FB3E8;
+      --paper: #161616;
+      --paper-raised: #1E1E1E;
+      --ink: #F6F6F6;
+      --ink-soft: #C7C7C7;
+      --ink-faint: #9C9C9C;
+      --blue: #8585F6;
+      --blue-hover: #ADADFF;
+      --stamp: #FF6564;
+      --stamp-soft: rgba(255,101,100,0.14);
+      --ochre: #545454;
+      --ochre-text: #C7C7C7;
+      --pen: #8585F6;
+      --line: #3A3A3A;
+      --line-strong: #545454;
+      --card-bg: #1E1E1E;
+      --focus: #8585F6;
       --shadow: rgba(0,0,0,0.5);
     }
   }
   :root[data-theme="dark"]{
-    --paper: #1C1814;
-    --paper-raised: #241F19;
-    --grain: rgba(230,190,120,0.035);
-    --ink: #F1E9DA;
-    --ink-soft: #C9BCA4;
-    --ink-faint: #8F8570;
-    --stamp: #E2725B;
-    --stamp-soft: rgba(226,114,91,0.16);
-    --ochre: #E0AE5C;
-    --ochre-text: #E0AE5C;
-    --tape: #6B5B3C;
-    --pen: #8FB4E0;
-    --line: #3A332A;
-    --line-strong: #4E4534;
-    --card-bg: #241F19;
-    --focus: #7FB3E8;
+    --paper: #161616;
+    --paper-raised: #1E1E1E;
+    --ink: #F6F6F6;
+    --ink-soft: #C7C7C7;
+    --ink-faint: #9C9C9C;
+    --blue: #8585F6;
+    --blue-hover: #ADADFF;
+    --stamp: #FF6564;
+    --stamp-soft: rgba(255,101,100,0.14);
+    --ochre: #545454;
+    --ochre-text: #C7C7C7;
+    --pen: #8585F6;
+    --line: #3A3A3A;
+    --line-strong: #545454;
+    --card-bg: #1E1E1E;
+    --focus: #8585F6;
     --shadow: rgba(0,0,0,0.5);
   }
 
@@ -80,17 +80,14 @@
   html{-webkit-text-size-adjust:100%;}
   body{
     margin:0;
-    background:
-      radial-gradient(circle at 20% 8%, var(--grain) 0, transparent 45%),
-      radial-gradient(circle at 82% 60%, var(--grain) 0, transparent 40%),
-      var(--paper);
+    background:var(--paper);
     color:var(--ink);
     font-family:'Work Sans', ui-sans-serif, system-ui, sans-serif;
     font-size:16px;
     line-height:1.55;
   }
   .handwritten{
-    font-family:'Caveat', 'Segoe Script', cursive;
+    font-family:inherit;
     color:var(--pen);
     font-weight:600;
   }
@@ -98,25 +95,28 @@
     *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
   }
   h1,h2,h3{
-    font-family:'Fraunces', Georgia, serif;
+    font-family:'Work Sans', ui-sans-serif, system-ui, sans-serif;
     text-wrap:balance;
     margin:0;
     color:var(--ink);
   }
   a{color:inherit;}
   .mono{
-    font-family:'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+    font-family:inherit;
+    font-variant-numeric:tabular-nums;
   }
   .eyebrow{
-    font-family:'IBM Plex Mono', monospace;
     font-size:0.72rem;
-    letter-spacing:0.14em;
+    letter-spacing:0.1em;
     text-transform:uppercase;
-    color:var(--stamp);
-    font-weight:600;
+    color:var(--blue);
+    font-weight:700;
   }
   button{font-family:inherit;}
   :focus-visible{outline:2px solid var(--focus); outline-offset:2px;}
+
+  /* ---------- tricolour bar: the one deliberate ".gouv.fr" flourish ---------- */
+  .tricolor-bar{height:4px; background:linear-gradient(to right, var(--blue) 0 33.33%, #FFFFFF 33.33% 66.66%, var(--stamp) 66.66% 100%);}
 
   .wrap{max-width:760px; margin:0 auto; padding:0 24px;}
 
@@ -135,13 +135,11 @@
     display:flex; align-items:baseline; gap:10px;
   }
   .wordmark .name{
-    font-family:'Fraunces', serif;
-    font-weight:900;
+    font-weight:800;
     font-size:1.35rem;
     letter-spacing:-0.01em;
   }
   .wordmark .tick{
-    font-family:'IBM Plex Mono', monospace;
     font-size:0.68rem;
     color:var(--ink-faint);
     border:1px solid var(--line-strong);
@@ -151,76 +149,46 @@
   .btn{
     font-weight:600;
     font-size:0.92rem;
-    border:1px solid var(--ink);
-    background:var(--ink);
-    color:var(--paper-raised);
+    border:1px solid var(--blue);
+    background:var(--blue);
+    color:#FFFFFF;
     padding:10px 16px;
     border-radius:2px;
     cursor:pointer;
     white-space:nowrap;
   }
-  .btn:hover{background:var(--stamp); border-color:var(--stamp);}
+  .btn:hover{background:var(--blue-hover); border-color:var(--blue-hover);}
   .btn.ghost{
     background:transparent;
-    color:var(--ink);
-    border:1px solid var(--line-strong);
+    color:var(--blue);
+    border:1px solid var(--blue);
   }
-  .btn.ghost:hover{border-color:var(--stamp); color:var(--stamp); background:transparent;}
+  .btn.ghost:hover{border-color:var(--blue-hover); color:var(--blue-hover); background:transparent;}
   .btn[disabled]{opacity:0.6; cursor:default;}
 
-  /* ---------- paper panel & vintage details ---------- */
+  /* ---------- panel ---------- */
   .paper-panel{
     background:var(--card-bg);
     border:1px solid var(--line);
     border-radius:2px;
-    box-shadow:0 3px 12px var(--shadow);
     position:relative;
   }
-  .dog-ear::after{
-    content:"";
-    position:absolute; top:0; right:0;
-    width:0; height:0;
-    border-style:solid;
-    border-width:0 20px 20px 0;
-    border-color:transparent var(--paper) transparent transparent;
-    filter:drop-shadow(-1px 1px 1px var(--shadow));
-  }
-  .paperclip{
-    position:absolute;
-    top:-15px; left:28px;
-    color:var(--line-strong);
-    transform:rotate(-16deg);
-    filter:drop-shadow(0 2px 2px var(--shadow));
-    z-index:3;
-  }
-  .postit{
-    display:inline-block;
-    background:var(--tape);
+  .callout{
+    display:block;
+    background:var(--paper-raised);
     color:var(--ink);
-    font-family:'Caveat', cursive;
+    border-left:4px solid var(--blue);
     font-weight:600;
-    font-size:1.1rem;
-    line-height:1.3;
-    padding:8px 14px 10px;
-    border-radius:1px;
-    box-shadow:0 3px 8px var(--shadow);
-    transform:rotate(-3deg);
+    font-size:1rem;
+    line-height:1.4;
+    padding:12px 16px;
     margin:0 0 16px;
-  }
-  .coffee-ring{
-    position:absolute;
-    width:130px; height:130px;
-    border-radius:50%;
-    border:9px solid rgba(120,72,32,0.10);
-    right:-18px; bottom:-26px;
-    pointer-events:none;
   }
 
   /* ---------- hero ---------- */
   .hero{
     padding:40px 32px 34px;
     margin:26px 0 30px;
-    transform:rotate(-0.35deg);
   }
   .hero-top{
     display:flex; align-items:flex-start; justify-content:space-between; gap:28px; flex-wrap:wrap;
@@ -230,10 +198,6 @@
     font-weight:700;
     line-height:1.08;
     max-width:14ch;
-  }
-  .hero h1 em{
-    font-style:italic;
-    color:var(--stamp);
   }
   .hero p.lede{
     margin-top:18px;
@@ -249,7 +213,7 @@
     align-items:center;
     gap:28px;
     flex-wrap:wrap;
-    transform:rotate(0.2deg);
+    border-left:4px solid var(--blue);
   }
   .entry-building{
     flex:none;
@@ -257,6 +221,7 @@
   }
   .entry-copy h2{font-size:1.4rem; font-weight:600; margin:6px 0 8px;}
   .entry-copy p{color:var(--ink-soft); max-width:46ch; margin:0 0 16px;}
+  .entry-copy .eyebrow{color:var(--blue);}
   .entry-copy .btn{display:inline-flex; align-items:center; gap:8px;}
 
   @media (max-width: 560px){
@@ -271,11 +236,9 @@
     display:grid;
     grid-template-columns:repeat(3, 1fr);
     gap:18px;
-    transform:rotate(0.25deg);
   }
   .stat b{
     display:block;
-    font-family:'Fraunces', serif;
     font-size:1.7rem;
     font-weight:700;
     font-variant-numeric: tabular-nums;
@@ -292,8 +255,8 @@
   }
   .tabs{display:flex; gap:6px;}
   .tab{
-    font-family:'IBM Plex Mono', monospace;
     font-size:0.78rem;
+    font-weight:600;
     letter-spacing:0.03em;
     text-transform:uppercase;
     background:transparent;
@@ -304,15 +267,15 @@
     cursor:pointer;
   }
   .tab[aria-pressed="true"]{
-    background:var(--ink);
-    color:var(--paper-raised);
-    border-color:var(--ink);
+    background:var(--blue);
+    color:#FFFFFF;
+    border-color:var(--blue);
   }
   select.filter, input.filter{
     box-sizing:border-box;
     height:36px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:0.78rem;
+    font-family:inherit;
+    font-size:0.85rem;
     background:var(--card-bg);
     color:var(--ink);
     border:1px solid var(--line);
@@ -336,7 +299,6 @@
   }
   input.filter::placeholder{
     color:var(--ink-faint);
-    font-family:'IBM Plex Mono', monospace;
   }
   input.filter::-webkit-search-cancel-button{ -webkit-appearance:none; }
 
@@ -351,16 +313,13 @@
     box-shadow:0 2px 8px var(--shadow);
     position:relative;
   }
-  .card:nth-child(3n){ transform:rotate(-0.4deg); }
-  .card:nth-child(3n+1){ transform:rotate(0.3deg); }
-  .card:nth-child(3n+2){ transform:rotate(-0.15deg); }
   .card-top{
     display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
     margin-bottom:10px;
   }
   .tag{
-    font-family:'IBM Plex Mono', monospace;
     font-size:0.68rem;
+    font-weight:600;
     letter-spacing:0.05em;
     text-transform:uppercase;
     color:var(--ochre-text);
@@ -369,10 +328,9 @@
     padding:3px 8px;
   }
   .dossier-no{
-    font-family:'IBM Plex Mono', monospace;
     font-size:0.7rem;
+    font-variant-numeric:tabular-nums;
     color:var(--ink-faint);
-    text-shadow:0.5px 0 rgba(192,57,43,0.35), -0.5px 0 rgba(47,95,163,0.3);
   }
   .card h3{
     font-size:1.24rem;
@@ -406,7 +364,7 @@
     cursor:pointer;
   }
   .vote-btn:hover{border-color:var(--stamp); color:var(--stamp);}
-  .vote-btn .count{font-family:'IBM Plex Mono', monospace; font-variant-numeric:tabular-nums;}
+  .vote-btn .count{font-variant-numeric:tabular-nums;}
   .vote-btn.voted{
     background:var(--stamp-soft);
     border-color:var(--stamp);
@@ -417,7 +375,6 @@
     text-align:center;
     color:var(--ink-faint);
     padding:40px 0;
-    font-family:'IBM Plex Mono', monospace;
     font-size:0.85rem;
   }
 
@@ -425,10 +382,10 @@
   .about{
     padding:38px 32px;
     margin:0 0 30px;
-    transform:rotate(-0.2deg);
   }
   .about h2{font-size:1.5rem; font-weight:600; margin-bottom:14px;}
   .about p{color:var(--ink-soft); max-width:62ch; margin:0 0 12px; position:relative;}
+  .about .eyebrow{color:var(--blue);}
 
   footer{
     padding:22px 4px 40px;
@@ -457,7 +414,6 @@
     background:var(--paper-raised);
     border-radius:6px;
     padding:8px 16px;
-    font-family:'IBM Plex Mono', monospace;
     font-weight:700;
     text-transform:uppercase;
     letter-spacing:0.06em;
@@ -477,7 +433,6 @@
     background:var(--stamp-soft);
     border-bottom:1px solid var(--stamp);
     color:var(--stamp);
-    font-family:'IBM Plex Mono', monospace;
     font-size:0.78rem;
     text-align:center;
     padding:8px 16px;
@@ -486,10 +441,11 @@
     text-align:center;
     color:var(--stamp);
     padding:20px;
-    font-family:'IBM Plex Mono', monospace;
     font-size:0.82rem;
   }
 </style>
+
+<div class="tricolor-bar" aria-hidden="true"></div>
 
 <div class="config-notice" id="configNotice" hidden>
   Mode démo local — Supabase n'est pas encore configuré (voir README.md). Les dossiers ci-dessous ne sont pas partagés entre visiteurs.
@@ -505,10 +461,7 @@
 
 <main class="wrap">
 
-  <section class="hero paper-panel dog-ear">
-    <div class="paperclip" aria-hidden="true">
-      <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12.5V6.5a3.5 3.5 0 0 1 7 0v10a2 2 0 0 1-4 0v-9"/></svg>
-    </div>
+  <section class="hero paper-panel">
     <div class="hero-top">
       <div>
         <h1>Votre dossier n'avance pas&nbsp;? Vous n'êtes pas seul(e)&nbsp;!</h1>
@@ -517,7 +470,7 @@
     </div>
   </section>
 
-  <section class="entry-sign paper-panel dog-ear">
+  <section class="entry-sign paper-panel">
     <div class="entry-building" aria-hidden="true">
       <svg viewBox="0 0 200 140" width="130" height="91" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <line x1="100" y1="6" x2="100" y2="26"/>
@@ -542,7 +495,7 @@
     </div>
   </section>
 
-  <section class="stats paper-panel dog-ear" aria-label="Statistiques">
+  <section class="stats paper-panel" aria-label="Statistiques">
     <div class="stat"><b class="mono" id="statCount">—</b><span>galères recensées</span></div>
     <div class="stat"><b class="mono" id="statAdmins">—</b><span>administrations mises en cause</span></div>
     <div class="stat"><b class="mono" id="statVotes">—</b><span>tampons de solidarité posés</span></div>
@@ -571,10 +524,9 @@
     <!-- injected -->
   </section>
 
-  <section class="about paper-panel dog-ear">
-    <div class="coffee-ring" aria-hidden="true"></div>
+  <section class="about paper-panel">
     <p class="eyebrow">Pourquoi ce site existe</p>
-    <div class="postit">Griffonné par des citoyens,<br>pas tamponné par un ministère.</div>
+    <div class="callout">Griffonné par des citoyens, pas tamponné par un ministère.</div>
     <h2>On commence simple, exprès.</h2>
     <p>Il n'existait pas vraiment, en France, d'endroit pensé pour ça : drôle, communautaire, fait pour écrire plutôt que pour remplir un formulaire de plus. Alors on commence petit — un défouloir, des catégories posées à la main, un bouton pour dire « vécu aussi ». Rien d'automatique, rien qui vous profile.</p>
     <p>Si ça prend racine, la suite pourra faire plus : croiser vos dossiers avec ce qui se discute à l'Assemblée, prévenir votre élu qu'un texte vous concerne. Pour l'instant, la seule question qui compte est plus simple : est-ce que vous avez envie de revenir raconter la prochaine ?</p>

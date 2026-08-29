@@ -9,67 +9,70 @@
 <title>La Galère — Guichet</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
 
 <style>
-  /* ---------- tokens (same as index.html) ---------- */
+  /* ---------- tokens: gouv.fr-inspired (Bleu France / Rouge Marianne), same as index.html ---------- */
   :root{
-    --paper: #FAF8F1;
-    --paper-raised: #FFFFFF;
-    --grain: rgba(150,130,90,0.05);
-    --ink: #2B2620;
-    --ink-soft: #6B6255;
-    --ink-faint: #9A9282;
-    --stamp: #C0392B;
-    --stamp-soft: rgba(192,57,43,0.10);
-    --ochre: #C68A2E;
-    --ochre-text: #8C5F17;
-    --tape: #E4C08A;
-    --pen: #2F5FA3;
-    --line: #E7E0D0;
-    --line-strong: #D2C7AC;
+    --paper: #FFFFFF;
+    --paper-raised: #F6F6F6;
+    --ink: #161616;
+    --ink-soft: #3A3A3A;
+    --ink-faint: #666666;
+    --blue: #000091;
+    --blue-hover: #1212FF;
+    --blue-soft: rgba(0,0,145,0.06);
+    --stamp: #E1000F;
+    --stamp-soft: rgba(225,0,15,0.08);
+    --ochre: #929292;
+    --ochre-text: #3A3A3A;
+    --pen: #000091;
+    --line: #DDDDDD;
+    --line-strong: #929292;
     --card-bg: #FFFFFF;
-    --focus: #2B6CB0;
-    --shadow: rgba(60,48,28,0.12);
+    --focus: #0A76F6;
+    --shadow: rgba(0,0,0,0.08);
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
-      --paper: #1C1814;
-      --paper-raised: #241F19;
-      --grain: rgba(230,190,120,0.035);
-      --ink: #F1E9DA;
-      --ink-soft: #C9BCA4;
-      --ink-faint: #8F8570;
-      --stamp: #E2725B;
-      --stamp-soft: rgba(226,114,91,0.16);
-      --ochre: #E0AE5C;
-      --ochre-text: #E0AE5C;
-      --tape: #6B5B3C;
-      --pen: #8FB4E0;
-      --line: #3A332A;
-      --line-strong: #4E4534;
-      --card-bg: #241F19;
-      --focus: #7FB3E8;
+      --paper: #161616;
+      --paper-raised: #1E1E1E;
+      --ink: #F6F6F6;
+      --ink-soft: #C7C7C7;
+      --ink-faint: #9C9C9C;
+      --blue: #8585F6;
+      --blue-hover: #ADADFF;
+      --blue-soft: rgba(133,133,246,0.14);
+      --stamp: #FF6564;
+      --stamp-soft: rgba(255,101,100,0.14);
+      --ochre: #545454;
+      --ochre-text: #C7C7C7;
+      --pen: #8585F6;
+      --line: #3A3A3A;
+      --line-strong: #545454;
+      --card-bg: #1E1E1E;
+      --focus: #8585F6;
       --shadow: rgba(0,0,0,0.5);
     }
   }
   :root[data-theme="dark"]{
-    --paper: #1C1814;
-    --paper-raised: #241F19;
-    --grain: rgba(230,190,120,0.035);
-    --ink: #F1E9DA;
-    --ink-soft: #C9BCA4;
-    --ink-faint: #8F8570;
-    --stamp: #E2725B;
-    --stamp-soft: rgba(226,114,91,0.16);
-    --ochre: #E0AE5C;
-    --ochre-text: #E0AE5C;
-    --tape: #6B5B3C;
-    --pen: #8FB4E0;
-    --line: #3A332A;
-    --line-strong: #4E4534;
-    --card-bg: #241F19;
-    --focus: #7FB3E8;
+    --paper: #161616;
+    --paper-raised: #1E1E1E;
+    --ink: #F6F6F6;
+    --ink-soft: #C7C7C7;
+    --ink-faint: #9C9C9C;
+    --blue: #8585F6;
+    --blue-hover: #ADADFF;
+    --blue-soft: rgba(133,133,246,0.14);
+    --stamp: #FF6564;
+    --stamp-soft: rgba(255,101,100,0.14);
+    --ochre: #545454;
+    --ochre-text: #C7C7C7;
+    --pen: #8585F6;
+    --line: #3A3A3A;
+    --line-strong: #545454;
+    --card-bg: #1E1E1E;
+    --focus: #8585F6;
     --shadow: rgba(0,0,0,0.5);
   }
 
@@ -77,10 +80,7 @@
   html{-webkit-text-size-adjust:100%;}
   body{
     margin:0;
-    background:
-      radial-gradient(circle at 20% 8%, var(--grain) 0, transparent 45%),
-      radial-gradient(circle at 82% 60%, var(--grain) 0, transparent 40%),
-      var(--paper);
+    background:var(--paper);
     color:var(--ink);
     font-family:'Work Sans', ui-sans-serif, system-ui, sans-serif;
     font-size:16px;
@@ -95,25 +95,28 @@
     *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
   }
   h1,h2,h3{
-    font-family:'Fraunces', Georgia, serif;
+    font-family:'Work Sans', ui-sans-serif, system-ui, sans-serif;
     text-wrap:balance;
     margin:0;
     color:var(--ink);
   }
   a{color:inherit;}
   .mono{
-    font-family:'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+    font-family:inherit;
+    font-variant-numeric:tabular-nums;
   }
   .eyebrow{
-    font-family:'IBM Plex Mono', monospace;
     font-size:0.72rem;
-    letter-spacing:0.14em;
+    letter-spacing:0.1em;
     text-transform:uppercase;
-    color:var(--stamp);
-    font-weight:600;
+    color:var(--blue);
+    font-weight:700;
   }
   button{font-family:inherit;}
   :focus-visible{outline:2px solid var(--focus); outline-offset:2px;}
+
+  /* ---------- tricolour bar ---------- */
+  .tricolor-bar{height:4px; background:linear-gradient(to right, var(--blue) 0 33.33%, #FFFFFF 33.33% 66.66%, var(--stamp) 66.66% 100%);}
 
   .wrap{max-width:760px; margin:0 auto; padding:0 24px;}
 
@@ -128,29 +131,28 @@
     display:flex; align-items:center; justify-content:space-between; gap:16px;
   }
   .wordmark .name{
-    font-family:'Fraunces', serif;
-    font-weight:900;
+    font-weight:800;
     font-size:1.35rem;
     letter-spacing:-0.01em;
   }
   .btn{
     font-weight:600;
     font-size:0.92rem;
-    border:1px solid var(--ink);
-    background:var(--ink);
-    color:var(--paper-raised);
+    border:1px solid var(--blue);
+    background:var(--blue);
+    color:#FFFFFF;
     padding:10px 16px;
     border-radius:2px;
     cursor:pointer;
     white-space:nowrap;
   }
-  .btn:hover{background:var(--stamp); border-color:var(--stamp);}
+  .btn:hover{background:var(--blue-hover); border-color:var(--blue-hover);}
   .btn.ghost{
     background:transparent;
-    color:var(--ink);
-    border:1px solid var(--line-strong);
+    color:var(--blue);
+    border:1px solid var(--blue);
   }
-  .btn.ghost:hover{border-color:var(--stamp); color:var(--stamp); background:transparent;}
+  .btn.ghost:hover{border-color:var(--blue-hover); color:var(--blue-hover); background:transparent;}
   .btn[disabled]{opacity:0.6; cursor:default;}
   .btn.small{font-size:0.78rem; padding:6px 11px;}
 
@@ -158,17 +160,7 @@
     background:var(--card-bg);
     border:1px solid var(--line);
     border-radius:2px;
-    box-shadow:0 3px 12px var(--shadow);
     position:relative;
-  }
-  .dog-ear::after{
-    content:"";
-    position:absolute; top:0; right:0;
-    width:0; height:0;
-    border-style:solid;
-    border-width:0 20px 20px 0;
-    border-color:transparent var(--paper) transparent transparent;
-    filter:drop-shadow(-1px 1px 1px var(--shadow));
   }
 
   /* ---------- guichet scene ---------- */
@@ -555,8 +547,8 @@
   form.dossier{margin-top:16px; display:flex; flex-direction:column; gap:14px;}
   .field label{
     display:block;
-    font-family:'IBM Plex Mono', monospace;
     font-size:0.72rem;
+    font-weight:600;
     letter-spacing:0.04em;
     text-transform:uppercase;
     color:var(--ink-soft);
@@ -579,14 +571,14 @@
   .hint.error{color:var(--stamp); font-weight:600;}
 
   .suggest-box{
-    background:var(--stamp-soft);
-    border:1px dashed var(--stamp);
+    background:var(--blue-soft);
+    border:1px dashed var(--blue);
     border-radius:2px;
     padding:12px 14px;
     margin-top:-2px;
   }
   .suggest-box p{margin:2px 0 10px; font-size:0.92rem;}
-  .suggest-box p strong{color:var(--stamp);}
+  .suggest-box p strong{color:var(--blue);}
   .suggest-actions{display:flex; gap:8px; flex-wrap:wrap;}
   .suggest-box .hint{margin-top:8px;}
 
@@ -605,6 +597,8 @@
   .success-panel p{color:var(--ink-soft); margin:10px 0 20px;}
 </style>
 
+<div class="tricolor-bar" aria-hidden="true"></div>
+
 <header class="site">
   <div class="wrap">
     <div class="wordmark"><span class="name">La Galère</span></div>
@@ -613,7 +607,7 @@
 </header>
 
 <main class="wrap">
-  <section class="guichet-scene paper-panel dog-ear">
+  <section class="guichet-scene paper-panel">
     <p class="eyebrow">Guichet des dossiers</p>
     <h1 class="guichet-title">Prenez un ticket, on vous appelle.</h1>
 

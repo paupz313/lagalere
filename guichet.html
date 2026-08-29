@@ -587,6 +587,28 @@
   .hint{font-size:0.76rem; color:var(--ink-faint); margin:6px 0 0;}
   .hint.error{color:var(--stamp); font-weight:700;}
 
+  .profile-toggle{display:flex; gap:8px;}
+  .profile-btn{
+    flex:1;
+    font-family:inherit;
+    font-weight:700;
+    font-size:0.9rem;
+    background:var(--paper-raised);
+    color:var(--ink);
+    border:1px solid var(--line-strong);
+    border-radius:2px;
+    padding:10px 12px;
+    cursor:pointer;
+  }
+  .profile-btn[aria-pressed="true"]{
+    background:var(--blue);
+    color:#FFFFFF;
+    border-color:var(--blue);
+  }
+  .loss-fields{background:var(--paper-raised); border:1px dashed var(--line-strong); border-radius:2px; padding:12px 14px;}
+  .loss-row{display:flex; gap:10px;}
+  .loss-row input, .loss-row select{width:auto; flex:1;}
+
   .suggest-box{
     background:var(--blue-soft);
     border:1px dashed var(--blue);
@@ -706,6 +728,27 @@
       </div>
       <form class="dossier" id="dossierForm">
         <div class="field">
+          <label>Votre situation</label>
+          <div class="profile-toggle" role="radiogroup" aria-label="Type de situation">
+            <button type="button" class="profile-btn" id="profileIndividual" data-profile="individual" aria-pressed="true">👤&nbsp; Particulier</button>
+            <button type="button" class="profile-btn" id="profileProfessional" data-profile="professional" aria-pressed="false">🏢&nbsp; Professionnel</button>
+          </div>
+        </div>
+        <div class="field loss-fields" id="lossFields" hidden>
+          <label for="fLossQty">Ce que ça vous a coûté</label>
+          <div class="loss-row">
+            <input id="fLossQty" type="number" min="0" step="0.5" placeholder="Quantité" aria-label="Quantité perdue">
+            <select id="fLossUnit" aria-label="Unité de la perte">
+              <option value="">Unité</option>
+              <option value="heures">Heures</option>
+              <option value="jours">Jours</option>
+              <option value="semaines">Semaines</option>
+              <option value="€">Euros (€)</option>
+            </select>
+          </div>
+          <p class="hint">Une estimation suffit — le temps ou l'argent perdu à cause de ce blocage.</p>
+        </div>
+        <div class="field">
           <label for="fTitle">Intitulé de votre galère</label>
           <input id="fTitle" type="text" maxlength="90" required placeholder="Ex. : Un formulaire pour obtenir un formulaire">
         </div>
@@ -753,27 +796,32 @@
 
 <!-- Cloudflare Turnstile: normally invisible (appearance "interaction-only"),
      only shows a challenge to suspicious traffic. Used to gate the silent
-     anonymous sign-in below so scripted mass sign-ins can't bypass it. -->
+     anonymous sign-in below so scripted mass sign-ins can't bypass it.
+     The callback MUST be defined before the async script tag below is even
+     parsed — an async script can execute the instant it's fetched, which can
+     otherwise race ahead of a later inline <script> and find no callback. -->
 <div id="turnstileWidget" aria-hidden="true"></div>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async defer></script>
+<script>
+  window.__turnstileTokenResolve = null;
+  window.__turnstileTokenPromise = new Promise(function(resolve){ window.__turnstileTokenResolve = resolve; });
+  window.onTurnstileLoad = function(){
+    if (!window.turnstile || !document.getElementById("turnstileWidget")){ window.__turnstileTokenResolve(null); return; }
+    window.turnstile.render("#turnstileWidget", {
+      sitekey: "0x4AAAAAAEgw4QP8xPtnmdNT",
+      appearance: "interaction-only",
+      callback: function(token){ window.__turnstileTokenResolve(token); },
+      "error-callback": function(){ window.__turnstileTokenResolve(null); }
+    });
+  };
+</script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async></script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
   "use strict";
 
-  var TURNSTILE_SITE_KEY = "0x4AAAAAAEgw4QP8xPtnmdNT";
-  var turnstileTokenResolve;
-  var turnstileTokenPromise = new Promise(function(resolve){ turnstileTokenResolve = resolve; });
-  window.onTurnstileLoad = function(){
-    if (!window.turnstile || !document.getElementById("turnstileWidget")){ turnstileTokenResolve(null); return; }
-    window.turnstile.render("#turnstileWidget", {
-      sitekey: TURNSTILE_SITE_KEY,
-      appearance: "interaction-only",
-      callback: function(token){ turnstileTokenResolve(token); },
-      "error-callback": function(){ turnstileTokenResolve(null); }
-    });
-  };
+  var turnstileTokenPromise = window.__turnstileTokenPromise;
 
   var SUPABASE_URL = "https://kvyfnwnrujwbxlyxuwop.supabase.co";
   var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2eWZud25ydWp3YnhseXh1d29wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4Mzk5ODcsImV4cCI6MjEwMzQxNTk4N30.goWCeVFbEfVAQSDE3hkAt-DJhiTb9FTlYUOu6dlZTes";
@@ -940,6 +988,21 @@
   function hideError(){ formError.hidden = true; formError.textContent = ""; }
   function showError(msg){ formError.textContent = msg; formError.hidden = false; }
 
+  /* ---------- particulier / professionnel ---------- */
+  var profileType = "individual";
+  var profileBtns = Array.prototype.slice.call(document.querySelectorAll(".profile-btn"));
+  var lossFields = document.getElementById("lossFields");
+  var fLossQty = document.getElementById("fLossQty");
+  var fLossUnit = document.getElementById("fLossUnit");
+  function setProfileType(type){
+    profileType = type;
+    profileBtns.forEach(function(b){ b.setAttribute("aria-pressed", String(b.getAttribute("data-profile") === type)); });
+    lossFields.hidden = type !== "professional";
+  }
+  profileBtns.forEach(function(btn){
+    btn.addEventListener("click", function(){ setProfileType(btn.getAttribute("data-profile")); });
+  });
+
   function updateSuggestion(){
     if (suggestionResolved || fCat.value !== ""){ suggestBox.hidden = true; return; }
     if (fBody.value.trim().length < 12){ suggestBox.hidden = true; return; }
@@ -983,6 +1046,7 @@
     overlay.classList.remove("open");
     dossierForm.reset();
     fCat.value = "";
+    setProfileType("individual");
     suggestionResolved = false;
     suggestBox.hidden = true;
     hideError();
@@ -1016,6 +1080,16 @@
       return;
     }
 
+    var lossQty = null, lossUnit = null;
+    if (profileType === "professional"){
+      lossQty = parseFloat(fLossQty.value);
+      lossUnit = fLossUnit.value;
+      if (!lossQty || lossQty <= 0 || !lossUnit){
+        showError("Merci d'indiquer une quantité et une unité pour ce que ça vous a coûté.");
+        return;
+      }
+    }
+
     var moderationText = title + " " + body + " " + name;
     if (detectPII(moderationText)){
       showError("Merci de ne pas partager de coordonnées personnelles (email, téléphone, adresse) — même les vôtres. Le guichet est public.");
@@ -1039,7 +1113,7 @@
 
     try{
       await sessionPromise;
-      var res = await sb.from("dossiers").insert({ no:no, cat:cat, title:title, body:body, author:name, user_id:currentUserId }).select().single();
+      var res = await sb.from("dossiers").insert({ no:no, cat:cat, title:title, body:body, author:name, user_id:currentUserId, profile_type:profileType, loss_qty:lossQty, loss_unit:lossUnit }).select().single();
       if (res.error) throw res.error;
       /* vote for your own dossier once, so it doesn't show as un-tamponné to you */
       await sb.from("votes").insert({ dossier_id: res.data.id, voter_id: getVoterId() });

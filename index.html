@@ -264,6 +264,33 @@
     color:var(--ink-soft);
   }
 
+  /* ---------- profile filter: particulier / professionnel, kept very clear-cut ---------- */
+  .profile-filter{
+    display:flex;
+    gap:8px;
+    margin:0 0 22px;
+  }
+  .profile-filter-btn{
+    flex:1;
+    font-family:inherit;
+    font-weight:700;
+    font-size:0.88rem;
+    background:var(--card-bg);
+    color:var(--ink-soft);
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:12px 14px;
+    cursor:pointer;
+  }
+  .profile-filter-btn[aria-pressed="true"]{
+    background:var(--blue);
+    color:#FFFFFF;
+    border-color:var(--blue);
+  }
+  @media (max-width: 560px){
+    .profile-filter{flex-direction:column;}
+  }
+
   /* ---------- toolbar ---------- */
   .toolbar{
     padding:26px 0 14px;
@@ -333,6 +360,7 @@
     display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
     margin-bottom:10px;
   }
+  .card-top-tags{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
   .tag{
     font-size:0.68rem;
     font-weight:700;
@@ -347,6 +375,24 @@
     font-size:0.7rem;
     font-variant-numeric:tabular-nums;
     color:var(--ink-faint);
+  }
+  .profile-badge{
+    font-size:0.68rem;
+    font-weight:700;
+    letter-spacing:0.03em;
+    color:var(--ink-soft);
+    border:1px solid var(--line-strong);
+    border-radius:2px;
+    padding:3px 8px;
+  }
+  .loss-line{
+    background:var(--blue-soft);
+    color:var(--ink);
+    font-size:0.85rem;
+    font-weight:700;
+    border-radius:2px;
+    padding:8px 12px;
+    margin:0 0 14px;
   }
   .card h3{
     font-size:1.24rem;
@@ -530,6 +576,12 @@
     <div class="stat"><b class="mono" id="statVotes">—</b><span>Tampons de solidarité posés</span></div>
   </section>
 
+  <section class="profile-filter" role="tablist" aria-label="Filtrer par profil">
+    <button class="profile-filter-btn" data-profile="" aria-pressed="true" type="button">Tous les dossiers</button>
+    <button class="profile-filter-btn" data-profile="individual" aria-pressed="false" type="button">👤&nbsp; Particuliers</button>
+    <button class="profile-filter-btn" data-profile="professional" aria-pressed="false" type="button">🏢&nbsp; Professionnels</button>
+  </section>
+
   <section class="toolbar">
     <div class="toolbar-top">
       <div class="tabs" role="tablist" aria-label="Trier">
@@ -570,27 +622,32 @@
 
 <!-- Cloudflare Turnstile: normally invisible (appearance "interaction-only"),
      only shows a challenge to suspicious traffic. Used to gate the silent
-     anonymous sign-in below so scripted mass sign-ins can't bypass it. -->
+     anonymous sign-in below so scripted mass sign-ins can't bypass it.
+     The callback MUST be defined before the async script tag below is even
+     parsed — an async script can execute the instant it's fetched, which can
+     otherwise race ahead of a later inline <script> and find no callback. -->
 <div id="turnstileWidget" aria-hidden="true"></div>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async defer></script>
+<script>
+  window.__turnstileTokenResolve = null;
+  window.__turnstileTokenPromise = new Promise(function(resolve){ window.__turnstileTokenResolve = resolve; });
+  window.onTurnstileLoad = function(){
+    if (!window.turnstile || !document.getElementById("turnstileWidget")){ window.__turnstileTokenResolve(null); return; }
+    window.turnstile.render("#turnstileWidget", {
+      sitekey: "0x4AAAAAAEgw4QP8xPtnmdNT",
+      appearance: "interaction-only",
+      callback: function(token){ window.__turnstileTokenResolve(token); },
+      "error-callback": function(){ window.__turnstileTokenResolve(null); }
+    });
+  };
+</script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async></script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
   "use strict";
 
-  var TURNSTILE_SITE_KEY = "0x4AAAAAAEgw4QP8xPtnmdNT";
-  var turnstileTokenResolve;
-  var turnstileTokenPromise = new Promise(function(resolve){ turnstileTokenResolve = resolve; });
-  window.onTurnstileLoad = function(){
-    if (!window.turnstile || !document.getElementById("turnstileWidget")){ turnstileTokenResolve(null); return; }
-    window.turnstile.render("#turnstileWidget", {
-      sitekey: TURNSTILE_SITE_KEY,
-      appearance: "interaction-only",
-      callback: function(token){ turnstileTokenResolve(token); },
-      "error-callback": function(){ turnstileTokenResolve(null); }
-    });
-  };
+  var turnstileTokenPromise = window.__turnstileTokenPromise;
 
   /* ======================================================================
      CONFIGURATION — remplacez ces deux valeurs par celles de votre projet
@@ -625,14 +682,14 @@
      affichés une fois SUPABASE_URL/SUPABASE_ANON_KEY renseignés. Ce sont des
      exemples fictifs écrits pendant le prototypage, pas de vrais témoignages. */
   var SEED = [
-    {id:"s1", no:"N°26-041207", date:"2026-07-14", cat:"Transport & permis", title:"La carte grise que je n'ai jamais eue, sauf sur le PV", body:"J'ai vendu ma voiture en 2023. En 2026, l'ANTS m'envoie toujours les PV du nouveau propriétaire, plus deux relances pour « défaut de déclaration de cession » — que j'ai faite trois fois, avec accusé de réception à chaque fois. Le monsieur au téléphone m'a dit que le système « s'était peut-être un peu emmêlé ». Un peu.", author:"ExPropriétaireDeLA-812-XY", votes:412},
-    {id:"s2", no:"N°26-033981", date:"2026-06-02", cat:"Impôts & fiscalité", title:"Deux avis d'imposition, deux montants, un seul contribuable", body:"Reçu le même jour deux avis d'imposition différents, à 400€ d'écart, tous deux « définitifs ». Le service des impôts m'a confirmé que « normalement il n'y en a qu'un ». J'ai payé le plus gros par précaution. Toujours pas de réponse sur lequel était le vrai.", author:"PatateDuFisc", votes:378},
-    {id:"s3", no:"N°26-045102", date:"2026-08-01", cat:"Préfecture & titres de séjour", title:"RDV disponible uniquement le 1er du mois, à 3h12", body:"Le site ouvre un nouveau créneau chaque mois, toujours à une heure improbable, toujours saturé en quatre secondes. Je programme une alarme depuis huit mois. J'ai fini par payer un service tiers pour surveiller le site à ma place. Mon titre de séjour expire dans trois semaines.", author:"InsomniaqueMalgréMoi", votes:356},
-    {id:"s4", no:"N°26-029844", date:"2026-05-20", cat:"Sécu / CPAM", title:"Ma carte Vitale bloquée à cause de ma grand-mère, décédée en 2011", body:"Remboursement refusé, motif indiqué : « bénéficiaire décédé ». Sauf que le bénéficiaire, c'est moi, bien vivant. Après enquête, mon dossier avait fusionné avec celui de ma grand-mère parce qu'on partage un numéro de Sécu à un chiffre près. Ça fait six semaines que j'existe administrativement à moitié.", author:"VivantMaisPasSurPapier", votes:331},
-    {id:"s5", no:"N°26-021355", date:"2026-04-11", cat:"Emploi / France Travail", title:"France Travail réclame une attestation Pôle Emploi... de France Travail", body:"Pour mon dossier de formation, on me demande une « attestation Pôle Emploi ». Pôle Emploi n'existe plus depuis 2024, c'est devenu France Travail. Le formulaire, lui, n'a pas été mis à jour. Le conseiller m'a suggéré d'écrire « Pôle Emploi » quand même, « pour que le logiciel comprenne ».", author:"EntreDeuxNoms", votes:298},
-    {id:"s6", no:"N°26-014200", date:"2026-03-09", cat:"Mairie & état civil", title:"Pour un acte de naissance, il faut... un acte de naissance", body:"Ma mairie de naissance demande une pièce d'identité pour délivrer un acte de naissance. Ma seule pièce d'identité valide a expiré parce que son renouvellement demandait un acte de naissance récent. On tourne en rond depuis février.", author:"NéQuelquePartMaisPlusPourLongtemps", votes:267},
-    {id:"s7", no:"N°26-009873", date:"2026-02-18", cat:"Transport & permis", title:"Un point de permis retiré pour une voiture vendue depuis trois ans", body:"Flashé en 2026 par une voiture que j'ai vendue en 2023, à un acheteur qui n'a jamais fait le changement de carte grise. Résultat : moins un point, et impossible de contester sans le nom du nouveau propriétaire, que je n'ai pas le droit d'obtenir « pour des raisons de confidentialité ».", author:"ZéroPointZéroVoiture", votes:241},
-    {id:"s8", no:"N°26-004501", date:"2026-01-27", cat:"Logement", title:"APL coupées pour un déménagement pourtant déclaré deux fois", body:"J'ai déclaré mon déménagement le jour même, avec justificatifs, deux fois par sécurité — par courrier et sur l'espace en ligne. La CAF a suspendu mes APL trois mois « en attendant la mise à jour du dossier ». Le dossier, lui, affichait déjà la bonne adresse depuis le premier jour.", author:"DéménagéMaisPasCru", votes:203}
+    {id:"s1", no:"N°26-041207", date:"2026-07-14", cat:"Transport & permis", title:"La carte grise que je n'ai jamais eue, sauf sur le PV", body:"J'ai vendu ma voiture en 2023. En 2026, l'ANTS m'envoie toujours les PV du nouveau propriétaire, plus deux relances pour « défaut de déclaration de cession » — que j'ai faite trois fois, avec accusé de réception à chaque fois. Le monsieur au téléphone m'a dit que le système « s'était peut-être un peu emmêlé ». Un peu.", author:"ExPropriétaireDeLA-812-XY", votes:412, profile_type:"individual"},
+    {id:"s2", no:"N°26-033981", date:"2026-06-02", cat:"Impôts & fiscalité", title:"Deux avis d'imposition, deux montants, une seule entreprise", body:"Reçus le même jour deux avis d'imposition différents pour ma micro-entreprise, à 1200€ d'écart, tous deux « définitifs ». Le service des impôts m'a confirmé que « normalement il n'y en a qu'un ». J'ai payé le plus gros par précaution, comptable à l'appui.", author:"PatateDuFisc", votes:378, profile_type:"professional", loss_qty:1200, loss_unit:"€"},
+    {id:"s3", no:"N°26-045102", date:"2026-08-01", cat:"Préfecture & titres de séjour", title:"RDV disponible uniquement le 1er du mois, à 3h12", body:"Le site ouvre un nouveau créneau chaque mois, toujours à une heure improbable, toujours saturé en quatre secondes. Je programme une alarme depuis huit mois. J'ai fini par payer un service tiers pour surveiller le site à ma place. Mon titre de séjour expire dans trois semaines.", author:"InsomniaqueMalgréMoi", votes:356, profile_type:"individual"},
+    {id:"s4", no:"N°26-029844", date:"2026-05-20", cat:"Sécu / CPAM", title:"Ma carte Vitale bloquée à cause de ma grand-mère, décédée en 2011", body:"Remboursement refusé, motif indiqué : « bénéficiaire décédé ». Sauf que le bénéficiaire, c'est moi, bien vivant. Après enquête, mon dossier avait fusionné avec celui de ma grand-mère parce qu'on partage un numéro de Sécu à un chiffre près. Ça fait six semaines que j'existe administrativement à moitié.", author:"VivantMaisPasSurPapier", votes:331, profile_type:"individual"},
+    {id:"s5", no:"N°26-021355", date:"2026-04-11", cat:"Emploi / France Travail", title:"France Travail réclame une attestation Pôle Emploi... de France Travail", body:"Pour mon dossier de formation, on me demande une « attestation Pôle Emploi ». Pôle Emploi n'existe plus depuis 2024, c'est devenu France Travail. Le formulaire, lui, n'a pas été mis à jour. Le conseiller m'a suggéré d'écrire « Pôle Emploi » quand même, « pour que le logiciel comprenne ».", author:"EntreDeuxNoms", votes:298, profile_type:"individual"},
+    {id:"s6", no:"N°26-014200", date:"2026-03-09", cat:"Mairie & état civil", title:"Pour un acte de naissance, il faut... un acte de naissance", body:"Ma mairie de naissance demande une pièce d'identité pour délivrer un acte de naissance. Ma seule pièce d'identité valide a expiré parce que son renouvellement demandait un acte de naissance récent. On tourne en rond depuis février.", author:"NéQuelquePartMaisPlusPourLongtemps", votes:267, profile_type:"individual"},
+    {id:"s7", no:"N°26-009873", date:"2026-02-18", cat:"Transport & permis", title:"Trois jours de livraisons perdus pour une carte grise pro bloquée", body:"Le camion de ma société ne peut plus rouler : le changement de titulaire de la carte grise pro est bloqué depuis six semaines « en cours de traitement ». Impossible de livrer, impossible de louer un véhicule de remplacement sans la même carte grise.", author:"ZéroPointZéroVoiture", votes:241, profile_type:"professional", loss_qty:3, loss_unit:"jours"},
+    {id:"s8", no:"N°26-004501", date:"2026-01-27", cat:"Logement", title:"APL coupées pour un déménagement pourtant déclaré deux fois", body:"J'ai déclaré mon déménagement le jour même, avec justificatifs, deux fois par sécurité — par courrier et sur l'espace en ligne. La CAF a suspendu mes APL trois mois « en attendant la mise à jour du dossier ». Le dossier, lui, affichait déjà la bonne adresse depuis le premier jour.", author:"DéménagéMaisPasCru", votes:203, profile_type:"individual"}
   ];
 
   var LS_VOTER = "lagalere_voter_id";
@@ -690,6 +747,7 @@
   var filterCat = "";
   var searchQuery = "";
   var filterMine = false;
+  var filterProfile = "";
 
   var feedEl = document.getElementById("feed");
   var statCount = document.getElementById("statCount");
@@ -700,6 +758,7 @@
   var sortVotesBtn = document.getElementById("sortVotes");
   var sortRecentBtn = document.getElementById("sortRecent");
   var filterMineBtn = document.getElementById("filterMine");
+  var profileFilterBtns = Array.prototype.slice.call(document.querySelectorAll(".profile-filter-btn"));
 
   CATEGORIES.forEach(function(c){
     var o = document.createElement("option");
@@ -724,9 +783,17 @@
     return String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   }
 
+  function formatLoss(d){
+    var qty = d.loss_qty;
+    if (qty === null || qty === undefined) return "";
+    var qtyStr = (qty % 1 === 0) ? String(qty) : String(qty).replace(".", ",");
+    return qtyStr + " " + (d.loss_unit || "");
+  }
+
   function render(){
     var list = dossiers.slice();
     if (filterMine) list = list.filter(function(d){ return currentUserId && d.user_id === currentUserId; });
+    if (filterProfile) list = list.filter(function(d){ return d.profile_type === filterProfile; });
     if (filterCat) list = list.filter(function(d){ return d.cat === filterCat; });
     if (searchQuery){
       var q = normalizeText(searchQuery);
@@ -754,13 +821,19 @@
         card.className = "card";
         var isVoted = !!voted[d.id];
         var isMine = !!(currentUserId && d.user_id === currentUserId);
+        var isPro = d.profile_type === "professional";
+        var lossLine = isPro && formatLoss(d) ? '<p class="loss-line">⏱️&nbsp; Perte estimée : ' + escapeHtml(formatLoss(d)) + '</p>' : '';
         card.innerHTML =
           '<div class="card-top">' +
-            '<span class="tag">' + escapeHtml(d.cat) + '</span>' +
+            '<div class="card-top-tags">' +
+              '<span class="profile-badge">' + (isPro ? '🏢 Professionnel' : '👤 Particulier') + '</span>' +
+              '<span class="tag">' + escapeHtml(d.cat) + '</span>' +
+            '</div>' +
             '<span class="dossier-no mono">' + escapeHtml(d.no) + '</span>' +
           '</div>' +
           '<h3>' + escapeHtml(d.title) + '</h3>' +
           '<p class="body">' + escapeHtml(d.body) + '</p>' +
+          lossLine +
           '<div class="card-bottom">' +
             '<span class="byline">' + escapeHtml(d.author || "Anonyme") + ' — ' + formatDate(d.date) + (isMine ? ' <span class="mine-tag">Vous</span>' : '') + '</span>' +
             '<button type="button" class="vote-btn' + (isVoted ? ' voted' : '') + '" data-id="' + d.id + '"' + (isVoted ? ' disabled' : '') + '>' +
@@ -813,6 +886,9 @@
           body: d.body,
           author: d.author,
           user_id: d.user_id,
+          profile_type: d.profile_type,
+          loss_qty: d.loss_qty,
+          loss_unit: d.loss_unit,
           votes: votesMap[d.id] || 0
         };
       });
@@ -904,6 +980,13 @@
       render();
     });
   }
+  profileFilterBtns.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      filterProfile = btn.getAttribute("data-profile");
+      profileFilterBtns.forEach(function(b){ b.setAttribute("aria-pressed", String(b === btn)); });
+      render();
+    });
+  });
 
   ensureSession().then(loadDossiers);
 })();

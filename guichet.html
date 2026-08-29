@@ -353,6 +353,12 @@
     margin-bottom:10px;
     letter-spacing:0.04em;
   }
+  .wr-board #queueNum{
+    font-weight:700;
+    font-size:1.25rem;
+    color:#ff4433;
+    text-shadow:0 0 6px rgba(255,68,51,0.75), 0 0 2px rgba(255,68,51,0.9);
+  }
   .wr-floor{
     position:relative;
     height:170px;
@@ -365,13 +371,15 @@
     top:8px; left:8px; right:8px;
     z-index:5;
     text-align:center;
-    font-family:'Caveat', cursive;
+    font-family:'IBM Plex Mono', monospace;
     font-weight:700;
-    font-size:1.15rem;
-    color:#1a1a1a;
-    background:rgba(255,255,255,0.88);
+    font-size:1.25rem;
+    letter-spacing:0.04em;
+    color:#ff4433;
+    text-shadow:0 0 6px rgba(255,68,51,0.75), 0 0 2px rgba(255,68,51,0.9);
+    background:#0c0f0a;
     border-radius:4px;
-    padding:2px 6px;
+    padding:4px 8px;
     opacity:0;
     transition:opacity 0.3s;
   }
@@ -510,7 +518,7 @@
 
   @media (max-width: 620px){
     .scene-row{flex-direction:column; align-items:center;}
-    .machine-col{padding-top:52px; padding-bottom:180px;}
+    .machine-col{padding-top:52px; padding-bottom:260px;}
     .ticket-arrow{left:50%; transform:translateX(-50%) rotate(0deg);}
     .ticket-arrow svg{transform:none;}
     .guichet-title{font-size:1.3rem;}
@@ -606,8 +614,11 @@
     border-color:var(--blue);
   }
   .loss-fields{background:var(--paper-raised); border:1px dashed var(--line-strong); border-radius:2px; padding:12px 14px;}
-  .loss-row{display:flex; gap:10px;}
-  .loss-row input, .loss-row select{width:auto; flex:1;}
+  .loss-row{display:flex; gap:10px; align-items:center;}
+  .loss-row + .loss-row{margin-top:8px;}
+  .loss-row input, .loss-row select{width:auto; flex:1; min-width:0;}
+  .loss-label{flex:none; width:52px; font-size:0.78rem; color:var(--ink-faint);}
+  .loss-suffix{flex:none; font-weight:700; color:var(--ink-soft); padding:0 2px;}
 
   .suggest-box{
     background:var(--blue-soft);
@@ -734,19 +745,24 @@
             <button type="button" class="profile-btn" id="profileProfessional" data-profile="professional" aria-pressed="false">🏢&nbsp; Professionnel</button>
           </div>
         </div>
-        <div class="field loss-fields" id="lossFields" hidden>
-          <label for="fLossQty">Ce que ça vous a coûté</label>
+        <div class="field loss-fields" id="lossFields">
+          <label>Ce que ça vous a coûté</label>
           <div class="loss-row">
-            <input id="fLossQty" type="number" min="0" step="0.5" placeholder="Quantité" aria-label="Quantité perdue">
-            <select id="fLossUnit" aria-label="Unité de la perte">
+            <span class="loss-label">Temps</span>
+            <input id="fLossQty" type="number" min="0" step="0.5" placeholder="Quantité" aria-label="Temps perdu — quantité">
+            <select id="fLossUnit" aria-label="Temps perdu — unité">
               <option value="">Unité</option>
               <option value="heures">Heures</option>
               <option value="jours">Jours</option>
               <option value="semaines">Semaines</option>
-              <option value="€">Euros (€)</option>
             </select>
           </div>
-          <p class="hint">Une estimation suffit — le temps ou l'argent perdu à cause de ce blocage.</p>
+          <div class="loss-row">
+            <span class="loss-label">Argent</span>
+            <input id="fLossMoney" type="number" min="0" step="0.5" placeholder="Montant" aria-label="Argent perdu, en euros">
+            <span class="loss-suffix">€</span>
+          </div>
+          <p class="hint">Une estimation suffit — le temps perdu, c'est aussi de l'argent perdu.</p>
         </div>
         <div class="field">
           <label for="fTitle">Intitulé de votre galère</label>
@@ -829,7 +845,7 @@
   var supabaseReady = SUPABASE_URL.indexOf("REPLACE_WITH") === -1 && SUPABASE_ANON_KEY.indexOf("REPLACE_WITH") === -1;
   var sb = (supabaseReady && window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-  var CATEGORIES = [
+  var CATEGORIES_INDIVIDUAL = [
     "Impôts & fiscalité",
     "CAF & prestations",
     "Préfecture & titres de séjour",
@@ -841,7 +857,18 @@
     "Autre"
   ];
 
-  var KEYWORDS = {
+  var CATEGORIES_PROFESSIONAL = [
+    "Impôts & fiscalité (entreprise)",
+    "URSSAF",
+    "CCI / CMA",
+    "Douanes",
+    "Tribunal de commerce",
+    "Sécu / CPAM",
+    "Mairie & état civil",
+    "Autre"
+  ];
+
+  var KEYWORDS_INDIVIDUAL = {
     "Impôts & fiscalité": ["impot","impots","fiscal","fiscalite","tresor public","avis d imposition","declaration de revenus","tva","prelevement a la source","dgfip","contribuable"],
     "CAF & prestations": ["caf","allocation","allocataire","prime d activite","rsa"],
     "Préfecture & titres de séjour": ["prefecture","titre de sejour","carte de sejour","visa","naturalisation","recepisse","sous-prefecture","regularisation"],
@@ -852,15 +879,26 @@
     "Logement": ["apl","logement","bailleur","loyer","locataire","hlm","charges locatives","bail"]
   };
 
+  var KEYWORDS_PROFESSIONAL = {
+    "Impôts & fiscalité (entreprise)": ["impot","impots","fiscal","fiscalite","tva","dgfip","impot sur les societes","cfe","cvae","liasse fiscale"],
+    "URSSAF": ["urssaf","cotisation","cotisations","charges sociales","dsn","declaration sociale nominative"],
+    "CCI / CMA": ["cci","cma","chambre de commerce","chambre des metiers","immatriculation","kbis"],
+    "Douanes": ["douane","douanes","import","export","dedouanement"],
+    "Tribunal de commerce": ["tribunal de commerce","greffe","rcs","liquidation","redressement judiciaire"],
+    "Sécu / CPAM": ["securite sociale","cpam","carte vitale","remboursement","secu"],
+    "Mairie & état civil": ["mairie","etat civil","permis de construire","urbanisme"]
+  };
+
   function normalizeText(s){
     return String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   }
   function suggestCategory(text){
     var norm = normalizeText(text);
+    var keywords = profileType === "professional" ? KEYWORDS_PROFESSIONAL : KEYWORDS_INDIVIDUAL;
     var best = null, bestScore = 0;
-    Object.keys(KEYWORDS).forEach(function(cat){
+    Object.keys(keywords).forEach(function(cat){
       var score = 0;
-      KEYWORDS[cat].forEach(function(kw){ if (norm.indexOf(kw) !== -1) score++; });
+      keywords[cat].forEach(function(kw){ if (norm.indexOf(kw) !== -1) score++; });
       if (score > bestScore){ bestScore = score; best = cat; }
     });
     return bestScore > 0 ? best : null;
@@ -959,15 +997,22 @@
   var prefersReducedMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
   var fCat = document.getElementById("fCat");
-  var fCatPlaceholder = document.createElement("option");
-  fCatPlaceholder.value = ""; fCatPlaceholder.textContent = "— à confirmer —";
-  fCatPlaceholder.disabled = true; fCatPlaceholder.selected = true;
-  fCat.appendChild(fCatPlaceholder);
-  CATEGORIES.forEach(function(c){
-    var o = document.createElement("option");
-    o.value = c; o.textContent = c;
-    fCat.appendChild(o);
-  });
+  function populateCategories(){
+    var previous = fCat.value;
+    fCat.innerHTML = "";
+    var placeholder = document.createElement("option");
+    placeholder.value = ""; placeholder.textContent = "— à confirmer —";
+    placeholder.disabled = true;
+    fCat.appendChild(placeholder);
+    var list = profileType === "professional" ? CATEGORIES_PROFESSIONAL : CATEGORIES_INDIVIDUAL;
+    list.forEach(function(c){
+      var o = document.createElement("option");
+      o.value = c; o.textContent = c;
+      fCat.appendChild(o);
+    });
+    fCat.value = list.indexOf(previous) !== -1 ? previous : "";
+    if (fCat.value === "") placeholder.selected = true;
+  }
 
   /* ---------- modal ---------- */
   var overlay = document.getElementById("overlay");
@@ -991,17 +1036,20 @@
   /* ---------- particulier / professionnel ---------- */
   var profileType = "individual";
   var profileBtns = Array.prototype.slice.call(document.querySelectorAll(".profile-btn"));
-  var lossFields = document.getElementById("lossFields");
   var fLossQty = document.getElementById("fLossQty");
   var fLossUnit = document.getElementById("fLossUnit");
+  var fLossMoney = document.getElementById("fLossMoney");
   function setProfileType(type){
     profileType = type;
     profileBtns.forEach(function(b){ b.setAttribute("aria-pressed", String(b.getAttribute("data-profile") === type)); });
-    lossFields.hidden = type !== "professional";
+    populateCategories();
+    suggestionResolved = false;
+    updateSuggestion();
   }
   profileBtns.forEach(function(btn){
     btn.addEventListener("click", function(){ setProfileType(btn.getAttribute("data-profile")); });
   });
+  populateCategories();
 
   function updateSuggestion(){
     if (suggestionResolved || fCat.value !== ""){ suggestBox.hidden = true; return; }
@@ -1080,14 +1128,12 @@
       return;
     }
 
-    var lossQty = null, lossUnit = null;
-    if (profileType === "professional"){
-      lossQty = parseFloat(fLossQty.value);
-      lossUnit = fLossUnit.value;
-      if (!lossQty || lossQty <= 0 || !lossUnit){
-        showError("Merci d'indiquer une quantité et une unité pour ce que ça vous a coûté.");
-        return;
-      }
+    var lossQty = fLossQty.value ? parseFloat(fLossQty.value) : null;
+    var lossUnit = fLossUnit.value || null;
+    var lossMoney = fLossMoney.value ? parseFloat(fLossMoney.value) : null;
+    if ((lossQty && !lossUnit) || (!lossQty && lossUnit)){
+      showError("Merci d'indiquer à la fois une quantité et une unité pour le temps perdu (ou de laisser les deux vides).");
+      return;
     }
 
     var moderationText = title + " " + body + " " + name;
@@ -1113,7 +1159,7 @@
 
     try{
       await sessionPromise;
-      var res = await sb.from("dossiers").insert({ no:no, cat:cat, title:title, body:body, author:name, user_id:currentUserId, profile_type:profileType, loss_qty:lossQty, loss_unit:lossUnit }).select().single();
+      var res = await sb.from("dossiers").insert({ no:no, cat:cat, title:title, body:body, author:name, user_id:currentUserId, profile_type:profileType, loss_qty:lossQty, loss_unit:lossUnit, loss_money:lossMoney }).select().single();
       if (res.error) throw res.error;
       /* vote for your own dossier once, so it doesn't show as un-tamponné to you */
       await sb.from("votes").insert({ dossier_id: res.data.id, voter_id: getVoterId() });

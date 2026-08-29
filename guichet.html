@@ -751,10 +751,29 @@
   </div>
 </div>
 
+<!-- Cloudflare Turnstile: normally invisible (appearance "interaction-only"),
+     only shows a challenge to suspicious traffic. Used to gate the silent
+     anonymous sign-in below so scripted mass sign-ins can't bypass it. -->
+<div id="turnstileWidget" aria-hidden="true"></div>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async defer></script>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
   "use strict";
+
+  var TURNSTILE_SITE_KEY = "0x4AAAAAAEgw4QP8xPtnmdNT";
+  var turnstileTokenResolve;
+  var turnstileTokenPromise = new Promise(function(resolve){ turnstileTokenResolve = resolve; });
+  window.onTurnstileLoad = function(){
+    if (!window.turnstile || !document.getElementById("turnstileWidget")){ turnstileTokenResolve(null); return; }
+    window.turnstile.render("#turnstileWidget", {
+      sitekey: TURNSTILE_SITE_KEY,
+      appearance: "interaction-only",
+      callback: function(token){ turnstileTokenResolve(token); },
+      "error-callback": function(){ turnstileTokenResolve(null); }
+    });
+  };
 
   var SUPABASE_URL = "https://kvyfnwnrujwbxlyxuwop.supabase.co";
   var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2eWZud25ydWp3YnhseXh1d29wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4Mzk5ODcsImV4cCI6MjEwMzQxNTk4N30.goWCeVFbEfVAQSDE3hkAt-DJhiTb9FTlYUOu6dlZTes";
@@ -864,7 +883,11 @@
       var sess = await sb.auth.getSession();
       var user = sess.data && sess.data.session && sess.data.session.user;
       if (!user){
-        var signIn = await sb.auth.signInAnonymously();
+        var token = await Promise.race([
+          turnstileTokenPromise,
+          new Promise(function(resolve){ setTimeout(function(){ resolve(null); }, 8000); })
+        ]);
+        var signIn = await sb.auth.signInAnonymously(token ? { options: { captchaToken: token } } : undefined);
         if (signIn.error) throw signIn.error;
         user = signIn.data && signIn.data.user;
       }

@@ -289,6 +289,7 @@
   }
   @media (max-width: 560px){
     .profile-filter{flex-direction:column;}
+    .tabs{flex-direction:column; width:100%;}
   }
 
   /* ---------- toolbar ---------- */
@@ -296,9 +297,10 @@
     padding:26px 0 14px;
     display:flex; flex-direction:column; gap:12px;
   }
-  .toolbar-top{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
-  .tabs{display:flex; gap:6px; flex-wrap:wrap;}
+  .toolbar-top{display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap;}
+  .tabs{display:flex; gap:8px;}
   .tab{
+    flex:1;
     font-size:0.78rem;
     font-weight:700;
     letter-spacing:0.03em;
@@ -306,7 +308,7 @@
     background:transparent;
     border:1px solid var(--line);
     color:var(--ink-soft);
-    padding:8px 12px;
+    padding:12px 14px;
     border-radius:2px;
     cursor:pointer;
   }
@@ -577,18 +579,18 @@
   </section>
 
   <section class="profile-filter" role="tablist" aria-label="Filtrer par profil">
-    <button class="profile-filter-btn" data-profile="" aria-pressed="true" type="button">Tous les dossiers</button>
+    <button class="profile-filter-btn" data-profile="" aria-pressed="true" type="button">Toutes les galères</button>
     <button class="profile-filter-btn" data-profile="individual" aria-pressed="false" type="button">👤&nbsp; Particuliers</button>
     <button class="profile-filter-btn" data-profile="professional" aria-pressed="false" type="button">🏢&nbsp; Professionnels</button>
   </section>
 
   <section class="toolbar">
+    <div class="tabs" role="tablist" aria-label="Trier">
+      <button class="tab" id="sortVotes" role="tab" aria-pressed="true" type="button">Les plus tamponnées</button>
+      <button class="tab" id="sortRecent" role="tab" aria-pressed="false" type="button">Les plus récentes</button>
+      <button class="tab filter-mine" id="filterMine" aria-pressed="false" type="button">Mes galères</button>
+    </div>
     <div class="toolbar-top">
-      <div class="tabs" role="tablist" aria-label="Trier">
-        <button class="tab" id="sortVotes" role="tab" aria-pressed="true" type="button">Les plus tamponnées</button>
-        <button class="tab" id="sortRecent" role="tab" aria-pressed="false" type="button">Les plus récentes</button>
-        <button class="tab filter-mine" id="filterMine" aria-pressed="false" type="button">Mes galères</button>
-      </div>
       <div class="search-wrap">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
           <circle cx="11" cy="11" r="7"/>
@@ -596,10 +598,10 @@
         </svg>
         <input type="search" class="filter" id="searchQuery" placeholder="Rechercher un dossier…" aria-label="Rechercher un dossier">
       </div>
+      <select class="filter" id="filterCat" aria-label="Filtrer par administration">
+        <option value="">Toutes les administrations</option>
+      </select>
     </div>
-    <select class="filter" id="filterCat" aria-label="Filtrer par administration">
-      <option value="">Toutes les administrations</option>
-    </select>
   </section>
 
   <section class="feed" id="feed" aria-live="polite">

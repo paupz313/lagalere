@@ -593,6 +593,12 @@
   .hint{font-size:0.76rem; color:var(--ink-faint); margin:6px 0 0;}
   .hint.error{color:var(--stamp); font-weight:700;}
   .auth-tabs{display:flex; gap:6px; margin-top:16px;}
+  .linklike{
+    background:none; border:none; padding:0;
+    font-family:inherit; font-size:inherit;
+    color:var(--blue); text-decoration:underline; cursor:pointer;
+  }
+  .linklike:hover{color:var(--blue-hover);}
 </style>
 
 <div class="tricolor-bar" aria-hidden="true"></div>
@@ -632,9 +638,10 @@
         <label for="authEmail">Email</label>
         <input id="authEmail" type="email" required autocomplete="email">
       </div>
-      <div class="field">
-        <label for="authPassword">Mot de passe</label>
+      <div class="field" id="authPasswordField">
+        <label for="authPassword" id="authPasswordLabel">Mot de passe</label>
         <input id="authPassword" type="password" required minlength="6" autocomplete="current-password">
+        <p class="hint" id="authForgotWrap"><button type="button" class="linklike" id="authForgot">Mot de passe oublié&nbsp;?</button></p>
       </div>
       <p class="hint error" id="authError" hidden></p>
       <p class="hint" id="authNotice" hidden></p>
@@ -951,19 +958,55 @@
   function hideAuthNotice(){ authNotice.hidden = true; authNotice.textContent = ""; }
   function showAuthNotice(msg){ authNotice.textContent = msg; authNotice.hidden = false; }
 
+  var authTabsWrap = document.querySelector(".auth-tabs");
+  var authEmailField = authEmail.closest(".field");
+  var authPasswordField = document.getElementById("authPasswordField");
+  var authPasswordLabel = document.getElementById("authPasswordLabel");
+  var authForgotWrap = document.getElementById("authForgotWrap");
+
+  /* modes : login | signup | reset (demander le lien) | newpassword (après
+     avoir cliqué le lien reçu par email) */
   function setAuthMode(mode){
     authMode = mode;
     authTabLogin.setAttribute("aria-pressed", String(mode === "login"));
     authTabSignup.setAttribute("aria-pressed", String(mode === "signup"));
+    authTabsWrap.hidden = (mode === "reset" || mode === "newpassword");
     authUsernameField.hidden = mode !== "signup";
-    authPassword.autocomplete = mode === "signup" ? "new-password" : "current-password";
-    authModalTitle.textContent = mode === "signup" ? "Créer un compte" : "Se connecter";
-    authSubmit.textContent = mode === "signup" ? "Créer le compte" : "Se connecter";
+    authEmailField.hidden = mode === "newpassword";
+    authPasswordField.hidden = mode === "reset";
+    authForgotWrap.hidden = mode !== "login";
+    authEmail.required = mode !== "newpassword";
+    authPassword.required = mode !== "reset";
+    authPassword.autocomplete = (mode === "signup" || mode === "newpassword") ? "new-password" : "current-password";
+    authPasswordLabel.textContent = mode === "newpassword" ? "Nouveau mot de passe" : "Mot de passe";
+    authModalTitle.textContent =
+      mode === "signup" ? "Créer un compte" :
+      mode === "reset" ? "Réinitialiser le mot de passe" :
+      mode === "newpassword" ? "Choisir un nouveau mot de passe" : "Se connecter";
+    authSubmit.textContent =
+      mode === "signup" ? "Créer le compte" :
+      mode === "reset" ? "Envoyer le lien" :
+      mode === "newpassword" ? "Enregistrer" : "Se connecter";
     hideAuthError();
     hideAuthNotice();
   }
   authTabLogin.addEventListener("click", function(){ setAuthMode("login"); });
   authTabSignup.addEventListener("click", function(){ setAuthMode("signup"); });
+  document.getElementById("authForgot").addEventListener("click", function(){
+    setAuthMode("reset");
+    showAuthNotice("Entrez votre email : si un compte existe, vous recevrez un lien pour choisir un nouveau mot de passe.");
+  });
+
+  /* Retour depuis le lien de réinitialisation reçu par email : supabase-js lit
+     le jeton dans l'URL et émet PASSWORD_RECOVERY. */
+  if (sb){
+    sb.auth.onAuthStateChange(function(event){
+      if (event === "PASSWORD_RECOVERY"){
+        openAuthModal("newpassword");
+        showAuthNotice("Choisissez votre nouveau mot de passe.");
+      }
+    });
+  }
 
   function openAuthModal(mode){
     setAuthMode(mode || "login");
@@ -995,6 +1038,37 @@
     var password = authPassword.value;
     authSubmit.disabled = true;
     try{
+      if (authMode === "reset"){
+        var resetToken = await freshCaptchaToken();
+        var rst = await sb.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + window.location.pathname,
+          captchaToken: resetToken || undefined
+        });
+        if (rst.error) throw rst.error;
+        /* Supabase répond volontairement pareil que l'email existe ou non,
+           pour ne pas révéler quels comptes existent. */
+        showAuthNotice("Si un compte existe pour cet email, le lien vient d'être envoyé. Pensez à regarder vos spams.");
+        authSubmit.disabled = false;
+        return;
+      }
+
+      if (authMode === "newpassword"){
+        var newPwd = await sb.auth.updateUser({ password: password });
+        if (newPwd.error) throw newPwd.error;
+        currentUserId = newPwd.data.user ? newPwd.data.user.id : currentUserId;
+        isAnonymous = false;
+        await fetchProfile();
+        if (!currentUsername){
+          var m = newPwd.data.user && newPwd.data.user.user_metadata;
+          await ensureProfile((m && m.username) || (newPwd.data.user && newPwd.data.user.email || "").split("@")[0]);
+        }
+        renderAuthArea();
+        render();
+        closeAuthModal();
+        authSubmit.disabled = false;
+        return;
+      }
+
       if (authMode === "signup"){
         var username = authUsername.value.trim();
         if (!username){ showAuthError("Merci d'indiquer un pseudo."); authSubmit.disabled = false; return; }

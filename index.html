@@ -603,6 +603,29 @@
      interactif (VPN, navigateur durci…) et que le widget est invisible,
      le visiteur ne peut plus jamais se connecter. */
   .captcha-slot{margin-top:16px; min-height:65px;}
+  /* Widget de la connexion anonyme silencieuse : invisible tant que Cloudflare
+     n'exige rien (hauteur 0), mais s'il doit afficher un défi il faut qu'il
+     soit visible ET qu'il ait l'air voulu, d'où cette petite carte fixe. */
+  #turnstileWidget:not(:empty){
+    position:fixed;
+    left:16px; bottom:16px;
+    z-index:90;
+    background:var(--card-bg);
+    border:1px solid var(--line-strong);
+    border-radius:3px;
+    padding:10px 12px 6px;
+    box-shadow:0 6px 24px var(--shadow);
+  }
+  #turnstileWidget:not(:empty)::before{
+    content:"Vérification anti-robot";
+    display:block;
+    font-size:0.7rem;
+    font-weight:700;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
 </style>
 
 <div class="tricolor-bar" aria-hidden="true"></div>
@@ -1009,6 +1032,25 @@
   var authPasswordField = document.getElementById("authPasswordField");
   var authPasswordLabel = document.getElementById("authPasswordLabel");
   var authForgotWrap = document.getElementById("authForgotWrap");
+  var authCaptchaSlot = document.getElementById("turnstileAuth");
+  var authCancelBtn = document.getElementById("authCancel");
+
+  /* État final « message lu » : plus de champs à remplir, un seul bouton qui
+     ferme la fenêtre (au lieu de laisser « Créer le compte » sous un message
+     de confirmation, ce qui laisse croire qu'il reste quelque chose à faire). */
+  function showAuthDone(msg){
+    authMode = "done";
+    showAuthNotice(msg);
+    hideAuthError();
+    authTabsWrap.hidden = true;
+    authUsernameField.hidden = true;
+    authEmailField.hidden = true;
+    authPasswordField.hidden = true;
+    authCaptchaSlot.hidden = true;
+    authCancelBtn.hidden = true;
+    authSubmit.textContent = "J'ai compris";
+    authSubmit.disabled = false;
+  }
 
   /* modes : login | signup | reset (demander le lien) | newpassword (après
      avoir cliqué le lien reçu par email) */
@@ -1020,6 +1062,9 @@
     authUsernameField.hidden = mode !== "signup";
     authEmailField.hidden = mode === "newpassword";
     authPasswordField.hidden = mode === "reset";
+    /* on ressort toujours de l'état « J'ai compris » */
+    authCaptchaSlot.hidden = false;
+    authCancelBtn.hidden = false;
     authForgotWrap.hidden = mode !== "login";
     authEmail.required = mode !== "newpassword";
     authPassword.required = mode !== "reset";
@@ -1087,6 +1132,8 @@
     var password = authPassword.value;
     authSubmit.disabled = true;
     try{
+      if (authMode === "done"){ closeAuthModal(); authSubmit.disabled = false; return; }
+
       if (authMode === "reset"){
         var resetToken = await freshCaptchaToken();
         var rst = await sb.auth.resetPasswordForEmail(email, {
@@ -1096,8 +1143,7 @@
         if (rst.error) throw rst.error;
         /* Supabase répond volontairement pareil que l'email existe ou non,
            pour ne pas révéler quels comptes existent. */
-        showAuthNotice("Si un compte existe pour cet email, le lien vient d'être envoyé. Pensez à regarder vos spams.");
-        authSubmit.disabled = false;
+        showAuthDone("Si un compte existe pour cet email, le lien vient d'être envoyé. Pensez à regarder vos spams.");
         return;
       }
 
@@ -1150,8 +1196,7 @@
              métadonnées, le profil sera créé à la première connexion. */
           currentUserId = null; currentUsername = null; isAnonymous = true;
           ensureSession();
-          showAuthNotice("Compte créé ! Confirmez votre adresse par email, puis revenez vous connecter.");
-          authSubmit.disabled = false;
+          showAuthDone("Compte créé ! Confirmez votre adresse via le lien reçu par email, puis revenez vous connecter.");
           return;
         }
         currentUserId = up.data.user ? up.data.user.id : null;

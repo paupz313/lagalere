@@ -581,7 +581,7 @@
   }
   .field input, .field select, .field textarea{
     width:100%;
-    font-family:'Work Sans', sans-serif;
+    font-family:'Marianne', arial, sans-serif;
     font-size:0.95rem;
     color:var(--ink);
     background:var(--paper-raised);
@@ -619,6 +619,17 @@
   .loss-row input, .loss-row select{width:auto; flex:1; min-width:0;}
   .loss-label{flex:none; width:52px; font-size:0.78rem; color:var(--ink-faint);}
   .loss-suffix{flex:none; font-weight:700; color:var(--ink-soft); padding:0 2px;}
+  .signed-in-name{
+    margin:0;
+    font-weight:700;
+    font-size:1rem;
+    color:var(--ink);
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-left:4px solid var(--blue);
+    border-radius:2px;
+    padding:10px 12px;
+  }
 
   .suggest-box{
     background:var(--blue-soft);
@@ -785,10 +796,15 @@
           <label for="fCat">Administration concernée</label>
           <select id="fCat" required></select>
         </div>
-        <div class="field">
+        <div class="field" id="nameField">
           <label for="fName">Votre nom ou pseudo</label>
           <input id="fName" type="text" maxlength="40" placeholder="Anonyme">
           <p class="hint">Facultatif. Personne ne vous demandera de pièce justificative — pour une fois.</p>
+        </div>
+        <div class="field" id="signedInAs" hidden>
+          <label>Publié en tant que</label>
+          <p class="signed-in-name" id="signedInName"></p>
+          <p class="hint">Votre pseudo de compte — plus besoin de le retaper à chaque dossier.</p>
         </div>
         <div class="field hp-field" aria-hidden="true">
           <label for="fWebsite">Laissez ce champ vide</label>
@@ -963,6 +979,8 @@
   /* Same silent, credential-free anonymous session as index.html — see the
      comment there. Kicked off immediately; the submit handler awaits it. */
   var currentUserId = null;
+  var currentUsername = null;
+  var isAnonymous = true;
   var sessionPromise = (async function ensureSession(){
     if (!sb) return null;
     try{
@@ -978,11 +996,34 @@
         user = signIn.data && signIn.data.user;
       }
       currentUserId = user ? user.id : null;
+      isAnonymous = !user || user.is_anonymous !== false;
+      /* Compte permanent (connecté depuis l'accueil) : on reprend son pseudo
+         au lieu de redemander un nom à chaque dossier. */
+      if (currentUserId && !isAnonymous){
+        var prof = await sb.from("profiles").select("username").eq("user_id", currentUserId).maybeSingle();
+        currentUsername = (prof.data && prof.data.username) || null;
+      }
     } catch(err){
       console.error("La Galère — échec de la connexion anonyme :", err);
     }
+    applyIdentityToForm();
     return currentUserId;
   })();
+
+  function applyIdentityToForm(){
+    var nameField = document.getElementById("nameField");
+    var signedInAs = document.getElementById("signedInAs");
+    var signedInName = document.getElementById("signedInName");
+    if (!nameField || !signedInAs || !signedInName) return;
+    if (currentUsername){
+      nameField.hidden = true;
+      signedInName.textContent = currentUsername;
+      signedInAs.hidden = false;
+    } else {
+      nameField.hidden = false;
+      signedInAs.hidden = true;
+    }
+  }
 
   function getVoterId(){
     if (currentUserId) return currentUserId;
@@ -1122,7 +1163,8 @@
     var title = fTitle.value.trim();
     var cat = fCat.value;
     var body = fBody.value.trim();
-    var name = fName.value.trim() || "Anonyme";
+    /* pseudo du compte s'il y en a un, sinon le champ libre, sinon Anonyme */
+    var name = currentUsername || fName.value.trim() || "Anonyme";
     if (!title || !cat || !body){
       showError("Merci de remplir l'intitulé, le récit et de confirmer un thème.");
       return;

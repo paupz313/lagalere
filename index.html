@@ -180,6 +180,10 @@
   }
   .btn.ghost:hover{border-color:var(--blue-hover); color:var(--blue-hover); background:transparent;}
   .btn[disabled]{opacity:0.6; cursor:default;}
+  .btn.small{font-size:0.78rem; padding:6px 11px;}
+
+  .auth-area{display:flex; align-items:center; gap:10px;}
+  .auth-username{font-size:0.85rem; font-weight:700; color:var(--ink); white-space:nowrap;}
 
   /* ---------- panel ---------- */
   .paper-panel{
@@ -520,6 +524,75 @@
     padding:20px;
     font-size:0.82rem;
   }
+
+  /* ---------- auth modal ---------- */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(20,24,32,0.55);
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:40px 20px;
+    overflow-y:auto;
+    z-index:100;
+    opacity:0;
+    visibility:hidden;
+    transition:opacity 0.25s ease, visibility 0s linear 0.25s;
+  }
+  .overlay.open{
+    opacity:1;
+    visibility:visible;
+    transition:opacity 0.25s ease;
+  }
+  .modal{
+    background:var(--card-bg);
+    border:1px solid var(--line-strong);
+    border-radius:3px;
+    max-width:420px;
+    width:100%;
+    padding:26px 26px 22px;
+    box-shadow:0 10px 40px var(--shadow);
+    transform:scale(0.92) translateY(10px);
+    transition:transform 0.3s cubic-bezier(.2,.8,.3,1);
+  }
+  .overlay.open .modal{transform:scale(1) translateY(0);}
+  .modal-top{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:4px;
+  }
+  .modal h2{font-size:1.3rem; font-weight:700;}
+  .modal .eyebrow{display:block; margin-bottom:6px;}
+  .close-x{
+    background:none; border:none; color:var(--ink-faint);
+    font-size:1.3rem; line-height:1; cursor:pointer; padding:4px;
+  }
+  .close-x:hover{color:var(--stamp);}
+  .field{margin-top:14px;}
+  .field label{
+    display:block;
+    font-size:0.72rem;
+    font-weight:700;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .field input{
+    width:100%;
+    font-family:'Marianne', arial, sans-serif;
+    font-size:0.95rem;
+    color:var(--ink);
+    background:var(--paper-raised);
+    border:1px solid var(--line-strong);
+    border-radius:2px;
+    padding:10px 12px;
+    box-sizing:border-box;
+  }
+  .field input:focus{outline:2px solid var(--focus); outline-offset:1px;}
+  .modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:18px;}
+  .hint{font-size:0.76rem; color:var(--ink-faint); margin:6px 0 0;}
+  .hint.error{color:var(--stamp); font-weight:700;}
+  .auth-tabs{display:flex; gap:6px; margin-top:16px;}
 </style>
 
 <div class="tricolor-bar" aria-hidden="true"></div>
@@ -533,8 +606,45 @@
     <div class="wordmark">
       <span class="name">Quelle Galère !</span>
     </div>
+    <div class="auth-area" id="authArea"></div>
   </div>
 </header>
+
+<div class="overlay" id="authOverlay">
+  <div class="modal">
+    <div class="modal-top">
+      <div>
+        <span class="eyebrow">Compte</span>
+        <h2 id="authModalTitle">Se connecter</h2>
+      </div>
+      <button class="close-x" id="authCloseModal" type="button" aria-label="Fermer">&times;</button>
+    </div>
+    <div class="auth-tabs" role="tablist" aria-label="Se connecter ou créer un compte">
+      <button type="button" class="tab" id="authTabLogin" role="tab" aria-pressed="true">Se connecter</button>
+      <button type="button" class="tab" id="authTabSignup" role="tab" aria-pressed="false">Créer un compte</button>
+    </div>
+    <form id="authForm">
+      <div class="field" id="authUsernameField" hidden>
+        <label for="authUsername">Pseudo</label>
+        <input id="authUsername" type="text" maxlength="40" placeholder="Comment on vous appelle ?">
+      </div>
+      <div class="field">
+        <label for="authEmail">Email</label>
+        <input id="authEmail" type="email" required autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="authPassword">Mot de passe</label>
+        <input id="authPassword" type="password" required minlength="6" autocomplete="current-password">
+      </div>
+      <p class="hint error" id="authError" hidden></p>
+      <p class="hint" id="authNotice" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" id="authCancel">Annuler</button>
+        <button type="submit" class="btn" id="authSubmit">Se connecter</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <main class="wrap">
 
@@ -630,17 +740,49 @@
      otherwise race ahead of a later inline <script> and find no callback. -->
 <div id="turnstileWidget" aria-hidden="true"></div>
 <script>
-  window.__turnstileTokenResolve = null;
-  window.__turnstileTokenPromise = new Promise(function(resolve){ window.__turnstileTokenResolve = resolve; });
+(function(){
+  /* Supabase applies captcha protection to EVERY auth endpoint (anonymous
+     sign-in, sign-up, sign-in with password), and a Turnstile token is
+     SINGLE-USE. So the initial token is kept for the silent anonymous
+     sign-in, and any later auth call must reset the widget for a fresh one. */
+  var widgetId = null;
+  var pending = null;
+  var firstToken = null, firstDone = false, firstWaiters = [];
+
+  function deliver(token){
+    if (pending){ var r = pending; pending = null; r(token); return; }
+    if (!firstDone){
+      firstDone = true; firstToken = token;
+      firstWaiters.splice(0).forEach(function(r){ r(token); });
+    }
+  }
+
   window.onTurnstileLoad = function(){
-    if (!window.turnstile || !document.getElementById("turnstileWidget")){ window.__turnstileTokenResolve(null); return; }
-    window.turnstile.render("#turnstileWidget", {
+    if (!window.turnstile || !document.getElementById("turnstileWidget")){ deliver(null); return; }
+    widgetId = window.turnstile.render("#turnstileWidget", {
       sitekey: "0x4AAAAAAEgw4QP8xPtnmdNT",
       appearance: "interaction-only",
-      callback: function(token){ window.__turnstileTokenResolve(token); },
-      "error-callback": function(){ window.__turnstileTokenResolve(null); }
+      callback: deliver,
+      "error-callback": function(){ deliver(null); }
     });
   };
+
+  window.__turnstileFirstToken = function(){
+    if (firstDone) return Promise.resolve(firstToken);
+    return new Promise(function(resolve){ firstWaiters.push(resolve); });
+  };
+
+  window.__turnstileFreshToken = function(){
+    return new Promise(function(resolve){
+      if (!window.turnstile || widgetId === null){ resolve(null); return; }
+      var settled = false;
+      var finish = function(t){ if (settled) return; settled = true; if (pending === finish) pending = null; resolve(t); };
+      pending = finish;
+      setTimeout(function(){ finish(null); }, 8000);
+      try { window.turnstile.reset(widgetId); } catch(e){ finish(null); }
+    });
+  };
+})();
 </script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async></script>
 
@@ -649,7 +791,10 @@
 (function(){
   "use strict";
 
-  var turnstileTokenPromise = window.__turnstileTokenPromise;
+  var turnstileTokenPromise = window.__turnstileFirstToken ? window.__turnstileFirstToken() : Promise.resolve(null);
+  function freshCaptchaToken(){
+    return window.__turnstileFreshToken ? window.__turnstileFreshToken() : Promise.resolve(null);
+  }
 
   /* ======================================================================
      CONFIGURATION — remplacez ces deux valeurs par celles de votre projet
@@ -710,6 +855,8 @@
      rate limits) without any login UI. Falls back to a local-only id in
      demo mode (no Supabase configured). */
   var currentUserId = null;
+  var currentUsername = null;
+  var isAnonymous = true;
   async function ensureSession(){
     if (!sb) return null;
     try{
@@ -725,11 +872,202 @@
         user = signIn.data && signIn.data.user;
       }
       currentUserId = user ? user.id : null;
+      isAnonymous = !user || user.is_anonymous !== false;
+      if (currentUserId && !isAnonymous) await fetchProfile();
     } catch(err){
       console.error("La Galère — échec de la connexion anonyme :", err);
     }
+    renderAuthArea();
     return currentUserId;
   }
+
+  async function fetchProfile(){
+    if (!sb || !currentUserId) return;
+    try{
+      var res = await sb.from("profiles").select("username").eq("user_id", currentUserId).maybeSingle();
+      currentUsername = (res.data && res.data.username) || null;
+    } catch(err){
+      console.error("La Galère — échec de la récupération du profil :", err);
+    }
+  }
+
+  /* Crée la ligne profils si elle manque (23505 = elle existe déjà). */
+  async function ensureProfile(username){
+    if (!sb || !currentUserId || !username) return;
+    try{
+      var res = await sb.from("profiles").insert({ user_id: currentUserId, username: username });
+      if (res.error && res.error.code !== "23505") throw res.error;
+      currentUsername = username;
+    } catch(err){
+      console.error("La Galère — échec de la création du profil :", err);
+      await fetchProfile();
+    }
+  }
+
+  /* ---------- compte : connexion / création (facultatif — les invités
+     restent anonymes) ---------- */
+  var authArea = document.getElementById("authArea");
+  var authOverlay = document.getElementById("authOverlay");
+  var authForm = document.getElementById("authForm");
+  var authModalTitle = document.getElementById("authModalTitle");
+  var authTabLogin = document.getElementById("authTabLogin");
+  var authTabSignup = document.getElementById("authTabSignup");
+  var authUsernameField = document.getElementById("authUsernameField");
+  var authUsername = document.getElementById("authUsername");
+  var authEmail = document.getElementById("authEmail");
+  var authPassword = document.getElementById("authPassword");
+  var authError = document.getElementById("authError");
+  var authNotice = document.getElementById("authNotice");
+  var authSubmit = document.getElementById("authSubmit");
+  var authMode = "login";
+
+  function renderAuthArea(){
+    if (!authArea) return;
+    if (currentUserId && !isAnonymous){
+      authArea.innerHTML = "";
+      var span = document.createElement("span");
+      span.className = "auth-username";
+      span.textContent = "👋 " + (currentUsername || "Vous");
+      var out = document.createElement("button");
+      out.type = "button";
+      out.className = "btn ghost small";
+      out.textContent = "Déconnexion";
+      out.addEventListener("click", signOutUser);
+      authArea.appendChild(span);
+      authArea.appendChild(out);
+    } else {
+      authArea.innerHTML = "";
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn ghost small";
+      btn.textContent = "Se connecter";
+      btn.addEventListener("click", function(){ openAuthModal("login"); });
+      authArea.appendChild(btn);
+    }
+  }
+
+  function hideAuthError(){ authError.hidden = true; authError.textContent = ""; }
+  function showAuthError(msg){ authError.textContent = msg; authError.hidden = false; }
+  function hideAuthNotice(){ authNotice.hidden = true; authNotice.textContent = ""; }
+  function showAuthNotice(msg){ authNotice.textContent = msg; authNotice.hidden = false; }
+
+  function setAuthMode(mode){
+    authMode = mode;
+    authTabLogin.setAttribute("aria-pressed", String(mode === "login"));
+    authTabSignup.setAttribute("aria-pressed", String(mode === "signup"));
+    authUsernameField.hidden = mode !== "signup";
+    authPassword.autocomplete = mode === "signup" ? "new-password" : "current-password";
+    authModalTitle.textContent = mode === "signup" ? "Créer un compte" : "Se connecter";
+    authSubmit.textContent = mode === "signup" ? "Créer le compte" : "Se connecter";
+    hideAuthError();
+    hideAuthNotice();
+  }
+  authTabLogin.addEventListener("click", function(){ setAuthMode("login"); });
+  authTabSignup.addEventListener("click", function(){ setAuthMode("signup"); });
+
+  function openAuthModal(mode){
+    setAuthMode(mode || "login");
+    authForm.reset();
+    authOverlay.classList.add("open");
+    authEmail.focus();
+  }
+  function closeAuthModal(){
+    authOverlay.classList.remove("open");
+  }
+  document.getElementById("authCloseModal").addEventListener("click", closeAuthModal);
+  document.getElementById("authCancel").addEventListener("click", closeAuthModal);
+  authOverlay.addEventListener("click", function(e){ if (e.target === authOverlay) closeAuthModal(); });
+
+  async function signOutUser(){
+    if (!sb) return;
+    try{ await sb.auth.signOut(); } catch(err){ console.error("La Galère — échec de la déconnexion :", err); }
+    currentUserId = null; currentUsername = null; isAnonymous = true;
+    await ensureSession();
+    render();
+  }
+
+  authForm.addEventListener("submit", async function(e){
+    e.preventDefault();
+    hideAuthError();
+    hideAuthNotice();
+    if (!sb){ showAuthError("Supabase n'est pas configuré."); return; }
+    var email = authEmail.value.trim();
+    var password = authPassword.value;
+    authSubmit.disabled = true;
+    try{
+      if (authMode === "signup"){
+        var username = authUsername.value.trim();
+        if (!username){ showAuthError("Merci d'indiquer un pseudo."); authSubmit.disabled = false; return; }
+        /* Un compte permanent est créé à part de la session anonyme courante.
+           (Convertir la session anonyme via updateUser() imposerait de vérifier
+           l'email AVANT de pouvoir définir un mot de passe — c'est-à-dire le
+           parcours par email qu'on veut justement éviter ici.) On quitte donc
+           la session anonyme d'abord, quitte à la recréer si l'inscription
+           échoue. */
+        var signupToken = await freshCaptchaToken();
+        try { await sb.auth.signOut(); } catch(e){ /* pas bloquant */ }
+        var up = await sb.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            captchaToken: signupToken || undefined,
+            data: { username: username }
+          }
+        });
+        if (up.error){
+          /* on récupère une session anonyme pour ne pas laisser le visiteur
+             sans identité après un échec */
+          currentUserId = null; currentUsername = null; isAnonymous = true;
+          ensureSession();
+          throw up.error;
+        }
+        if (!up.data.session){
+          /* "Confirm email" est activé côté Supabase : pas de session tant que
+             l'email n'est pas confirmé. Le pseudo est déjà stocké dans les
+             métadonnées, le profil sera créé à la première connexion. */
+          currentUserId = null; currentUsername = null; isAnonymous = true;
+          ensureSession();
+          showAuthNotice("Compte créé ! Confirmez votre adresse par email, puis revenez vous connecter.");
+          authSubmit.disabled = false;
+          return;
+        }
+        currentUserId = up.data.user ? up.data.user.id : null;
+        isAnonymous = false;
+        await ensureProfile(username);
+        renderAuthArea();
+        render();
+        closeAuthModal();
+      } else {
+        var loginToken = await freshCaptchaToken();
+        var res = await sb.auth.signInWithPassword({
+          email: email,
+          password: password,
+          options: loginToken ? { captchaToken: loginToken } : undefined
+        });
+        if (res.error) throw res.error;
+        currentUserId = res.data.user ? res.data.user.id : null;
+        isAnonymous = false;
+        await fetchProfile();
+        if (!currentUsername){
+          /* première connexion après une inscription avec confirmation d'email :
+             le profil n'existe pas encore, on le crée depuis le pseudo mis en
+             métadonnées à l'inscription */
+          var meta = res.data.user && res.data.user.user_metadata;
+          await ensureProfile((meta && meta.username) || email.split("@")[0]);
+        }
+        renderAuthArea();
+        render();
+        closeAuthModal();
+      }
+    } catch(err){
+      console.error("La Galère — échec de l'authentification :", err);
+      var msg = (err && err.message) || "Une erreur est survenue.";
+      if (/already registered|already exists/i.test(msg)) msg = "Un compte existe déjà avec cet email — essayez de vous connecter.";
+      else if (/invalid login credentials/i.test(msg)) msg = "Email ou mot de passe incorrect.";
+      showAuthError(msg);
+    }
+    authSubmit.disabled = false;
+  });
 
   function getVoterId(){
     if (currentUserId) return currentUserId;

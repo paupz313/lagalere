@@ -599,6 +599,10 @@
     color:var(--blue); text-decoration:underline; cursor:pointer;
   }
   .linklike:hover{color:var(--blue-hover);}
+  /* Le captcha doit pouvoir S'AFFICHER : si Cloudflare demande un défi
+     interactif (VPN, navigateur durci…) et que le widget est invisible,
+     le visiteur ne peut plus jamais se connecter. */
+  .captcha-slot{margin-top:16px; min-height:65px;}
 </style>
 
 <div class="tricolor-bar" aria-hidden="true"></div>
@@ -643,6 +647,7 @@
         <input id="authPassword" type="password" required minlength="6" autocomplete="current-password">
         <p class="hint" id="authForgotWrap"><button type="button" class="linklike" id="authForgot">Mot de passe oublié&nbsp;?</button></p>
       </div>
+      <div class="captcha-slot" id="turnstileAuth"></div>
       <p class="hint error" id="authError" hidden></p>
       <p class="hint" id="authNotice" hidden></p>
       <div class="modal-actions">
@@ -789,6 +794,44 @@
       try { window.turnstile.reset(widgetId); } catch(e){ finish(null); }
     });
   };
+
+  /* ---- widget VISIBLE du formulaire de compte ----
+     Le widget ci-dessus est invisible (hauteur 0) : parfait pour la connexion
+     anonyme silencieuse, mais inutilisable si Cloudflare exige un défi
+     interactif — le visiteur n'aurait aucun moyen de le résoudre. Les actions
+     de compte (inscription / connexion / réinitialisation) utilisent donc ce
+     second widget, affiché dans la fenêtre du compte. */
+  var authId = null, authPending = null;
+  function authDeliver(t){ if (authPending){ var r = authPending; authPending = null; r(t); } }
+
+  window.__authCaptchaRender = function(){
+    if (!window.turnstile || authId !== null) return;
+    if (!document.getElementById("turnstileAuth")) return;
+    try{
+      authId = window.turnstile.render("#turnstileAuth", {
+        sitekey: "0x4AAAAAAEgw4QP8xPtnmdNT",
+        callback: authDeliver,
+        "error-callback": function(){ authDeliver(null); }
+      });
+    } catch(e){ authId = null; }
+  };
+
+  window.__authCaptchaToken = function(){
+    return new Promise(function(resolve){
+      if (!window.turnstile || authId === null){ resolve(null); return; }
+      var already = window.turnstile.getResponse(authId);
+      if (already){ resolve(already); return; }
+      var settled = false;
+      var finish = function(t){ if (settled) return; settled = true; if (authPending === finish) authPending = null; resolve(t); };
+      authPending = finish;
+      /* large : un défi interactif se résout à la main */
+      setTimeout(function(){ finish(null); }, 60000);
+    });
+  };
+
+  window.__authCaptchaReset = function(){
+    if (window.turnstile && authId !== null){ try{ window.turnstile.reset(authId); } catch(e){} }
+  };
 })();
 </script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async></script>
@@ -799,9 +842,12 @@
   "use strict";
 
   var turnstileTokenPromise = window.__turnstileFirstToken ? window.__turnstileFirstToken() : Promise.resolve(null);
+  /* Jeton du widget VISIBLE du formulaire de compte (résolvable même si
+     Cloudflare demande un défi interactif). */
   function freshCaptchaToken(){
-    return window.__turnstileFreshToken ? window.__turnstileFreshToken() : Promise.resolve(null);
+    return window.__authCaptchaToken ? window.__authCaptchaToken() : Promise.resolve(null);
   }
+  function resetCaptcha(){ if (window.__authCaptchaReset) window.__authCaptchaReset(); }
 
   /* ======================================================================
      CONFIGURATION — remplacez ces deux valeurs par celles de votre projet
@@ -1012,6 +1058,9 @@
     setAuthMode(mode || "login");
     authForm.reset();
     authOverlay.classList.add("open");
+    /* rendu seulement quand la fenêtre est visible : un widget rendu dans un
+       conteneur masqué ne peut pas afficher de défi */
+    if (window.__authCaptchaRender) window.__authCaptchaRender();
     authEmail.focus();
   }
   function closeAuthModal(){
@@ -1138,8 +1187,12 @@
       var msg = (err && err.message) || "Une erreur est survenue.";
       if (/already registered|already exists/i.test(msg)) msg = "Un compte existe déjà avec cet email — essayez de vous connecter.";
       else if (/invalid login credentials/i.test(msg)) msg = "Email ou mot de passe incorrect.";
+      else if (/email not confirmed/i.test(msg)) msg = "Confirmez d'abord votre adresse via le lien reçu par email.";
+      else if (/captcha/i.test(msg)) msg = "Vérification anti-robot échouée — refaites le test ci-dessus puis réessayez.";
       showAuthError(msg);
     }
+    /* un jeton Turnstile ne sert qu'une fois : on réarme pour l'essai suivant */
+    resetCaptcha();
     authSubmit.disabled = false;
   });
 

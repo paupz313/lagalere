@@ -619,6 +619,50 @@
   .loss-row input, .loss-row select{width:auto; flex:1; min-width:0;}
   .loss-label{flex:none; width:52px; font-size:0.78rem; color:var(--ink-faint);}
   .loss-suffix{flex:none; font-weight:700; color:var(--ink-soft); padding:0 2px;}
+  .auth-area{display:flex; align-items:center; gap:10px;}
+  .auth-username{font-size:0.85rem; font-weight:700; color:var(--ink); white-space:nowrap;}
+  .auth-tabs{display:flex; gap:6px; margin-top:16px;}
+  .tab{
+    font-size:0.78rem;
+    font-weight:700;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    padding:8px 12px;
+    border-radius:2px;
+    cursor:pointer;
+    flex:1;
+  }
+  .tab[aria-pressed="true"]{background:var(--blue); color:#FFFFFF; border-color:var(--blue);}
+  .linklike{
+    background:none; border:none; padding:0;
+    font-family:inherit; font-size:inherit;
+    color:var(--blue); text-decoration:underline; cursor:pointer;
+  }
+  .linklike:hover{color:var(--blue-hover);}
+  .captcha-slot{margin-top:16px; min-height:65px;}
+  #turnstileWidget:not(:empty){
+    position:fixed;
+    left:16px; bottom:16px;
+    z-index:90;
+    background:var(--card-bg);
+    border:1px solid var(--line-strong);
+    border-radius:3px;
+    padding:10px 12px 6px;
+    box-shadow:0 6px 24px var(--shadow);
+  }
+  #turnstileWidget:not(:empty)::before{
+    content:"Vérification anti-robot";
+    display:block;
+    font-size:0.7rem;
+    font-weight:700;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
   .signed-in-name{
     margin:0;
     font-weight:700;
@@ -663,7 +707,9 @@
 <header class="site">
   <div class="wrap">
     <div class="wordmark"><span class="name">Quelle Galère !</span></div>
-    <a class="btn ghost" href="index.html">← Retour</a>
+    <div class="auth-area" id="authArea">
+      <a class="btn ghost small" href="index.html">← Retour</a>
+    </div>
   </div>
 </header>
 
@@ -737,6 +783,45 @@
     </div>
   </section>
 </main>
+
+<div class="overlay" id="authOverlay">
+  <div class="modal">
+    <div class="modal-top">
+      <div>
+        <span class="eyebrow">Compte</span>
+        <h2 id="authModalTitle">Se connecter</h2>
+      </div>
+      <button class="close-x" id="authCloseModal" type="button" aria-label="Fermer">&times;</button>
+    </div>
+    <p class="hint" id="authIntro" hidden></p>
+    <div class="auth-tabs" role="tablist" aria-label="Se connecter ou créer un compte">
+      <button type="button" class="tab" id="authTabLogin" role="tab" aria-pressed="true">Se connecter</button>
+      <button type="button" class="tab" id="authTabSignup" role="tab" aria-pressed="false">Créer un compte</button>
+    </div>
+    <form id="authForm">
+      <div class="field" id="authUsernameField" hidden>
+        <label for="authUsername">Pseudo</label>
+        <input id="authUsername" type="text" maxlength="40" placeholder="Comment on vous appelle ?">
+      </div>
+      <div class="field">
+        <label for="authEmail">Email</label>
+        <input id="authEmail" type="email" required autocomplete="email">
+      </div>
+      <div class="field" id="authPasswordField">
+        <label for="authPassword" id="authPasswordLabel">Mot de passe</label>
+        <input id="authPassword" type="password" required minlength="6" autocomplete="current-password">
+        <p class="hint" id="authForgotWrap"><button type="button" class="linklike" id="authForgot">Mot de passe oublié&nbsp;?</button></p>
+      </div>
+      <div class="captcha-slot" id="turnstileAuth"></div>
+      <p class="hint error" id="authError" hidden></p>
+      <p class="hint" id="authNotice" hidden></p>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" id="authCancel">Annuler</button>
+        <button type="submit" class="btn" id="authSubmit">Se connecter</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <div class="overlay" id="overlay">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -844,7 +929,40 @@
       callback: function(token){ window.__turnstileTokenResolve(token); },
       "error-callback": function(){ window.__turnstileTokenResolve(null); }
     });
+    window.__authCaptchaRender();
   };
+
+  /* Widget VISIBLE du formulaire de compte : si Cloudflare exige un défi
+     interactif, il faut pouvoir l'afficher, sinon le visiteur est bloqué. */
+  (function(){
+    var authId = null, authPending = null;
+    function authDeliver(t){ if (authPending){ var r = authPending; authPending = null; r(t); } }
+    window.__authCaptchaRender = function(){
+      if (!window.turnstile || authId !== null) return;
+      if (!document.getElementById("turnstileAuth")) return;
+      try{
+        authId = window.turnstile.render("#turnstileAuth", {
+          sitekey: "0x4AAAAAAEgw4QP8xPtnmdNT",
+          callback: authDeliver,
+          "error-callback": function(){ authDeliver(null); }
+        });
+      } catch(e){ authId = null; }
+    };
+    window.__authCaptchaToken = function(){
+      return new Promise(function(resolve){
+        if (!window.turnstile || authId === null){ resolve(null); return; }
+        var already = window.turnstile.getResponse(authId);
+        if (already){ resolve(already); return; }
+        var settled = false;
+        var finish = function(t){ if (settled) return; settled = true; if (authPending === finish) authPending = null; resolve(t); };
+        authPending = finish;
+        setTimeout(function(){ finish(null); }, 60000);
+      });
+    };
+    window.__authCaptchaReset = function(){
+      if (window.turnstile && authId !== null){ try{ window.turnstile.reset(authId); } catch(e){} }
+    };
+  })();
 </script>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad" async></script>
 
@@ -1007,8 +1125,216 @@
       console.error("La Galère — échec de la connexion anonyme :", err);
     }
     applyIdentityToForm();
+    renderAuthArea();
+    /* Retour depuis le lien de confirmation / réinitialisation : on rouvre
+       directement le brouillon, sans refaire toute l'animation du ticket. */
+    if (hasDraft() && restoreDraft()){
+      applyIdentityToForm();
+      openModal();
+      if (currentUserId && !isAnonymous){
+        showError("Bon retour — votre récit est intact, il ne reste qu'à le publier.");
+      }
+    }
     return currentUserId;
   })();
+
+  /* ---------- compte : même formulaire que l'accueil, pour ne pas avoir à
+     quitter le guichet au moment de publier ---------- */
+  var authArea = document.getElementById("authArea");
+  var authOverlay = document.getElementById("authOverlay");
+  var authForm = document.getElementById("authForm");
+  var authModalTitle = document.getElementById("authModalTitle");
+  var authIntro = document.getElementById("authIntro");
+  var authTabsWrap = document.querySelector(".auth-tabs");
+  var authTabLogin = document.getElementById("authTabLogin");
+  var authTabSignup = document.getElementById("authTabSignup");
+  var authUsernameField = document.getElementById("authUsernameField");
+  var authUsername = document.getElementById("authUsername");
+  var authEmail = document.getElementById("authEmail");
+  var authPassword = document.getElementById("authPassword");
+  var authEmailField = authEmail.closest(".field");
+  var authPasswordField = document.getElementById("authPasswordField");
+  var authPasswordLabel = document.getElementById("authPasswordLabel");
+  var authForgotWrap = document.getElementById("authForgotWrap");
+  var authCaptchaSlot = document.getElementById("turnstileAuth");
+  var authCancelBtn = document.getElementById("authCancel");
+  var authError = document.getElementById("authError");
+  var authNotice = document.getElementById("authNotice");
+  var authSubmit = document.getElementById("authSubmit");
+  var authMode = "login";
+
+  function hideAuthError(){ authError.hidden = true; authError.textContent = ""; }
+  function showAuthError(m){ authError.textContent = m; authError.hidden = false; }
+  function hideAuthNotice(){ authNotice.hidden = true; authNotice.textContent = ""; }
+  function showAuthNotice(m){ authNotice.textContent = m; authNotice.hidden = false; }
+
+  function renderAuthArea(){
+    authArea.innerHTML = "";
+    if (currentUserId && !isAnonymous){
+      var span = document.createElement("span");
+      span.className = "auth-username";
+      span.textContent = "👋 " + (currentUsername || "Vous");
+      authArea.appendChild(span);
+    }
+    var back = document.createElement("a");
+    back.className = "btn ghost small";
+    back.href = "index.html";
+    back.textContent = "← Retour";
+    authArea.appendChild(back);
+  }
+
+  function setAuthMode(mode){
+    authMode = mode;
+    authTabLogin.setAttribute("aria-pressed", String(mode === "login"));
+    authTabSignup.setAttribute("aria-pressed", String(mode === "signup"));
+    authTabsWrap.hidden = (mode === "reset");
+    authUsernameField.hidden = mode !== "signup";
+    authEmailField.hidden = false;
+    authPasswordField.hidden = mode === "reset";
+    authForgotWrap.hidden = mode !== "login";
+    authCaptchaSlot.hidden = false;
+    authCancelBtn.hidden = false;
+    authEmail.required = true;
+    authPassword.required = mode !== "reset";
+    authPassword.autocomplete = mode === "signup" ? "new-password" : "current-password";
+    authPasswordLabel.textContent = "Mot de passe";
+    authModalTitle.textContent =
+      mode === "signup" ? "Créer un compte" :
+      mode === "reset" ? "Réinitialiser le mot de passe" : "Se connecter";
+    authSubmit.textContent =
+      mode === "signup" ? "Créer le compte" :
+      mode === "reset" ? "Envoyer le lien" : "Se connecter";
+    hideAuthError();
+    hideAuthNotice();
+  }
+  function showAuthDone(msg){
+    authMode = "done";
+    showAuthNotice(msg);
+    hideAuthError();
+    authTabsWrap.hidden = true;
+    authUsernameField.hidden = true;
+    authEmailField.hidden = true;
+    authPasswordField.hidden = true;
+    authCaptchaSlot.hidden = true;
+    authCancelBtn.hidden = true;
+    authSubmit.textContent = "J'ai compris";
+    authSubmit.disabled = false;
+  }
+
+  authTabLogin.addEventListener("click", function(){ setAuthMode("login"); });
+  authTabSignup.addEventListener("click", function(){ setAuthMode("signup"); });
+  document.getElementById("authForgot").addEventListener("click", function(){ setAuthMode("reset"); });
+
+  function openAuthModal(mode){
+    setAuthMode(mode || "login");
+    authForm.reset();
+    authOverlay.classList.add("open");
+    if (window.__authCaptchaRender) window.__authCaptchaRender();
+    authEmail.focus();
+  }
+  /* Appelé quand on tente de publier sans compte : le brouillon est déjà en
+     mémoire, on explique simplement pourquoi on demande un compte. */
+  function openAuthGate(){
+    overlay.classList.remove("open");
+    openAuthModal("login");
+    authIntro.hidden = false;
+    authIntro.textContent = "Votre récit est gardé de côté — connectez-vous ou créez un compte pour le publier, rien ne sera perdu.";
+  }
+  function closeAuthModal(){
+    authOverlay.classList.remove("open");
+    authIntro.hidden = true;
+    /* on remet le visiteur devant son brouillon */
+    if (hasDraft()) openModal();
+  }
+  document.getElementById("authCloseModal").addEventListener("click", closeAuthModal);
+  authCancelBtn.addEventListener("click", closeAuthModal);
+  authOverlay.addEventListener("click", function(e){ if (e.target === authOverlay) closeAuthModal(); });
+
+  authForm.addEventListener("submit", async function(e){
+    e.preventDefault();
+    hideAuthError(); hideAuthNotice();
+    if (!sb){ showAuthError("Supabase n'est pas configuré."); return; }
+    var email = authEmail.value.trim();
+    var password = authPassword.value;
+    authSubmit.disabled = true;
+    try{
+      if (authMode === "done"){ closeAuthModal(); authSubmit.disabled = false; return; }
+
+      if (authMode === "reset"){
+        var rtok = await (window.__authCaptchaToken ? window.__authCaptchaToken() : Promise.resolve(null));
+        var rst = await sb.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + "/guichet.html",
+          captchaToken: rtok || undefined
+        });
+        if (rst.error) throw rst.error;
+        showAuthDone("Si un compte existe pour cet email, le lien vient d'être envoyé.");
+        return;
+      }
+
+      if (authMode === "signup"){
+        var uname = authUsername.value.trim();
+        if (!uname){ showAuthError("Merci d'indiquer un pseudo."); authSubmit.disabled = false; return; }
+        var stok = await (window.__authCaptchaToken ? window.__authCaptchaToken() : Promise.resolve(null));
+        try { await sb.auth.signOut(); } catch(e2){}
+        var up = await sb.auth.signUp({
+          email: email, password: password,
+          options: {
+            captchaToken: stok || undefined,
+            data: { username: uname },
+            emailRedirectTo: window.location.origin + "/guichet.html"
+          }
+        });
+        if (up.error){ currentUserId = null; isAnonymous = true; throw up.error; }
+        if (!up.data.session){
+          showAuthDone("Compte créé ! Confirmez votre adresse via le lien reçu par email — votre récit vous attendra ici.");
+          return;
+        }
+        currentUserId = up.data.user ? up.data.user.id : null;
+        isAnonymous = false;
+        await ensureProfile(uname);
+      } else {
+        var ltok = await (window.__authCaptchaToken ? window.__authCaptchaToken() : Promise.resolve(null));
+        var res = await sb.auth.signInWithPassword({
+          email: email, password: password,
+          options: ltok ? { captchaToken: ltok } : undefined
+        });
+        if (res.error) throw res.error;
+        currentUserId = res.data.user ? res.data.user.id : null;
+        isAnonymous = false;
+        var prof = await sb.from("profiles").select("username").eq("user_id", currentUserId).maybeSingle();
+        currentUsername = (prof.data && prof.data.username) || null;
+        if (!currentUsername){
+          var meta = res.data.user && res.data.user.user_metadata;
+          await ensureProfile((meta && meta.username) || email.split("@")[0]);
+        }
+      }
+      renderAuthArea();
+      applyIdentityToForm();
+      authOverlay.classList.remove("open");
+      authIntro.hidden = true;
+      openModal();
+      showError("Vous êtes connecté — vérifiez votre récit et publiez-le.");
+    } catch(err){
+      console.error("Quelle Galère — échec de l'authentification :", err);
+      var msg = (err && err.message) || "Une erreur est survenue.";
+      if (/already registered|already exists/i.test(msg)) msg = "Un compte existe déjà avec cet email — connectez-vous.";
+      else if (/invalid login credentials/i.test(msg)) msg = "Email ou mot de passe incorrect.";
+      else if (/email not confirmed/i.test(msg)) msg = "Confirmez d'abord votre adresse via le lien reçu par email.";
+      else if (/captcha/i.test(msg)) msg = "Vérification anti-robot échouée — refaites le test puis réessayez.";
+      showAuthError(msg);
+    }
+    if (window.__authCaptchaReset) window.__authCaptchaReset();
+    authSubmit.disabled = false;
+  });
+
+  async function ensureProfile(username){
+    if (!sb || !currentUserId || !username) return;
+    try{
+      var r = await sb.from("profiles").insert({ user_id: currentUserId, username: username });
+      if (r.error && r.error.code !== "23505") throw r.error;
+      currentUsername = username;
+    } catch(err){ console.error("Quelle Galère — profil :", err); }
+  }
 
   function applyIdentityToForm(){
     var nameField = document.getElementById("nameField");
@@ -1124,6 +1450,45 @@
     suggestBox.hidden = true;
   });
 
+  /* ---------- brouillon : le récit ne doit JAMAIS être perdu ----------
+     Créer un compte impose de passer par sa boîte mail et de revenir sur le
+     site : sans sauvegarde locale, tout ce qui a été écrit disparaîtrait. */
+  var LS_DRAFT = "quellegalere_draft";
+  function saveDraft(){
+    if (!fTitle.value && !fBody.value && !fLossQty.value && !fLossMoney.value) return;
+    safeSet(LS_DRAFT, {
+      profileType: profileType,
+      lossQty: fLossQty.value,
+      lossUnit: fLossUnit.value,
+      lossMoney: fLossMoney.value,
+      title: fTitle.value,
+      body: fBody.value,
+      cat: fCat.value,
+      name: fName.value
+    });
+  }
+  function clearDraft(){ try{ localStorage.removeItem(LS_DRAFT); } catch(e){} }
+  function hasDraft(){ var d = safeGet(LS_DRAFT); return !!(d && (d.title || d.body)); }
+  function restoreDraft(){
+    var d = safeGet(LS_DRAFT);
+    if (!d) return false;
+    if (d.profileType) setProfileType(d.profileType);
+    fLossQty.value = d.lossQty || "";
+    fLossUnit.value = d.lossUnit || "";
+    fLossMoney.value = d.lossMoney || "";
+    fTitle.value = d.title || "";
+    fBody.value = d.body || "";
+    if (d.cat) fCat.value = d.cat;
+    fName.value = d.name || "";
+    suggestionResolved = true;
+    suggestBox.hidden = true;
+    return true;
+  }
+  [fTitle, fBody, fName, fLossQty, fLossUnit, fLossMoney, fCat].forEach(function(el){
+    if (el) el.addEventListener("input", saveDraft);
+    if (el) el.addEventListener("change", saveDraft);
+  });
+
   function openModal(){
     modalDefault.hidden = false;
     modalSuccess.hidden = true;
@@ -1132,12 +1497,8 @@
     fTitle.focus();
   }
   function closeModal(){
+    saveDraft();
     overlay.classList.remove("open");
-    dossierForm.reset();
-    fCat.value = "";
-    setProfileType("individual");
-    suggestionResolved = false;
-    suggestBox.hidden = true;
     hideError();
   }
   document.getElementById("closeModal").addEventListener("click", closeModal);
@@ -1194,18 +1555,31 @@
 
     if (!supabaseReady){
       submitBtn.disabled = false;
+      clearDraft();
       modalDefault.hidden = true;
       modalSuccess.hidden = false;
       return;
     }
 
+    /* Il faut un compte pour publier. Le brouillon est déjà sauvegardé, donc
+       le récit survit à la création de compte (et au détour par la boîte mail). */
+    await sessionPromise;
+    if (!currentUserId || isAnonymous){
+      saveDraft();
+      submitBtn.disabled = false;
+      openAuthGate();
+      return;
+    }
+
     try{
-      await sessionPromise;
       var res = await sb.from("dossiers").insert({ no:no, cat:cat, title:title, body:body, author:name, user_id:currentUserId, profile_type:profileType, loss_qty:lossQty, loss_unit:lossUnit, loss_money:lossMoney }).select().single();
       if (res.error) throw res.error;
       /* vote for your own dossier once, so it doesn't show as un-tamponné to you */
       await sb.from("votes").insert({ dossier_id: res.data.id, voter_id: getVoterId() });
       submitBtn.disabled = false;
+      clearDraft();
+      dossierForm.reset();
+      setProfileType("individual");
       modalDefault.hidden = true;
       modalSuccess.hidden = false;
     } catch(err){

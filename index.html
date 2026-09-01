@@ -1349,7 +1349,9 @@
           '<div class="card-top">' +
             '<div class="card-top-tags">' +
               '<span class="profile-badge">' + (isPro ? '🏢 Professionnel' : '👤 Particulier') + '</span>' +
-              '<span class="tag">' + escapeHtml(d.cat) + '</span>' +
+              /* « Autre » affiche l'administration proposée par l'auteur, sinon
+                 la catégorie ne dit rien et la liste ne peut pas s'enrichir */
+              '<span class="tag">' + escapeHtml(d.cat_other ? "Autre : " + d.cat_other : d.cat) + '</span>' +
             '</div>' +
             '<span class="dossier-no mono">' + escapeHtml(d.no) + '</span>' +
           '</div>' +

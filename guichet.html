@@ -934,6 +934,11 @@
           <label for="fCat">Administration concernée</label>
           <select id="fCat" required></select>
         </div>
+        <div class="field" id="catOtherField" hidden>
+          <label for="fCatOther">Laquelle&nbsp;?</label>
+          <input id="fCatOther" type="text" maxlength="60" placeholder="Ex. : URSSAF Île-de-France">
+          <p class="hint">Dites-nous laquelle — on l'ajoutera à la liste.</p>
+        </div>
         <div class="field loss-fields" id="lossFields">
           <label>Ce que ça vous a coûté <span class="optional-tag">facultatif</span></label>
           <div class="loss-row">
@@ -1517,9 +1522,19 @@
     suggestBox.hidden = true;
     fCat.focus();
   });
+  /* « Autre » ne dit pas QUELLE administration : sans ce champ, l'info est
+     perdue et la liste ne peut jamais s'enrichir. */
+  var catOtherField = document.getElementById("catOtherField");
+  var fCatOther = document.getElementById("fCatOther");
+  function syncCatOther(){
+    var isOther = fCat.value === "Autre";
+    catOtherField.hidden = !isOther;
+    if (!isOther) fCatOther.value = "";
+  }
   fCat.addEventListener("change", function(){
     suggestionResolved = true;
     suggestBox.hidden = true;
+    syncCatOther();
   });
 
   /* ---------- brouillon : le récit ne doit JAMAIS être perdu ----------
@@ -1536,6 +1551,7 @@
       title: fTitle.value,
       body: fBody.value,
       cat: fCat.value,
+      catOther: fCatOther.value,
       name: fName.value
     });
   }
@@ -1551,12 +1567,14 @@
     fTitle.value = d.title || "";
     fBody.value = d.body || "";
     if (d.cat) fCat.value = d.cat;
+    fCatOther.value = d.catOther || "";
+    syncCatOther();
     fName.value = d.name || "";
     suggestionResolved = true;
     suggestBox.hidden = true;
     return true;
   }
-  [fTitle, fBody, fName, fLossQty, fLossUnit, fLossMoney, fCat].forEach(function(el){
+  [fTitle, fBody, fName, fLossQty, fLossUnit, fLossMoney, fCat, fCatOther].forEach(function(el){
     if (el) el.addEventListener("input", saveDraft);
     if (el) el.addEventListener("change", saveDraft);
   });
@@ -1607,6 +1625,11 @@
       showError("Merci de remplir l'intitulé, le récit et de confirmer un thème.");
       return;
     }
+    var catOther = cat === "Autre" ? fCatOther.value.trim() : "";
+    if (cat === "Autre" && !catOther){
+      showError("Merci de préciser laquelle — sinon on ne pourra pas l'ajouter à la liste.");
+      return;
+    }
 
     var lossQty = fLossQty.value ? parseFloat(fLossQty.value) : null;
     var lossUnit = fLossUnit.value || null;
@@ -1649,7 +1672,7 @@
     }
 
     try{
-      var res = await sb.from("dossiers").insert({ no:no, cat:cat, title:title, body:body, author:name, user_id:currentUserId, profile_type:profileType, loss_qty:lossQty, loss_unit:lossUnit, loss_money:lossMoney }).select().single();
+      var res = await sb.from("dossiers").insert({ no:no, cat:cat, title:title, body:body, author:name, user_id:currentUserId, profile_type:profileType, loss_qty:lossQty, loss_unit:lossUnit, loss_money:lossMoney, cat_other:catOther || null }).select().single();
       if (res.error) throw res.error;
       /* vote for your own dossier once, so it doesn't show as un-tamponné to you */
       await sb.from("votes").insert({ dossier_id: res.data.id, voter_id: getVoterId() });

@@ -52,6 +52,10 @@
     /* hauteur commune aux deux boîtes de la scène (machine / salle d'attente),
        pour qu'elles soient alignées en haut comme en bas */
     --scene-box-h: 264px;
+    /* hauteur visible du ticket quand il est coincé (26% de ~225px) : le
+       message « tirez dessus » doit passer SOUS cette bande, sinon il est
+       illisible derrière le ticket */
+    --ticket-stuck-reveal: 60px;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
@@ -214,7 +218,7 @@
   .win98-machine{
     position:relative;
     width:100%;
-    min-height:var(--scene-box-h);
+    height:var(--scene-box-h);
     display:flex;
     flex-direction:column;
     background:#c0c0c0;
@@ -344,7 +348,11 @@
     color:var(--ink-faint);
   }
   .machine-note.fail{color:var(--stamp); font-weight:700;}
-  .machine-note.prompt{color:var(--ochre-text); font-weight:700; margin-top:48px;}
+  .machine-note.prompt{
+    color:var(--ochre-text);
+    font-weight:700;
+    margin-top:calc(var(--ticket-stuck-reveal) + 24px);
+  }
 
   /* ---------- waiting room: simple retro pixel scene ---------- */
   .waitingroom-col{
@@ -352,16 +360,20 @@
     min-width:280px;
     padding-top:44px;
   }
+  /* même châssis Windows 98 que le distributeur : les deux boîtes doivent se
+     lire comme deux fenêtres du même vieux logiciel */
   .waiting-room{
     width:100%;
-    min-height:var(--scene-box-h);
+    height:var(--scene-box-h);
     display:flex;
     flex-direction:column;
-    background:#232820;
-    border:3px solid #12140f;
-    border-radius:2px;
-    padding:10px;
+    background:#c0c0c0;
+    border:2px solid;
+    border-color:#fff #000 #000 #fff;
+    box-shadow:inset 1px 1px 0 #dfdfdf, inset -1px -1px 0 #808080, 3px 3px 0 rgba(0,0,0,0.35);
+    font-family:'Tahoma','MS Sans Serif',Geneva,sans-serif;
   }
+  .wr-inner{padding:10px; flex:1; display:flex; flex-direction:column;}
   .wr-board{
     background:#111;
     border:2px solid #3a3a3a;
@@ -382,7 +394,7 @@
   .wr-floor{
     position:relative;
     flex:1;
-    min-height:170px;
+    min-height:0;
     background:#c9b98a;
     border-top:4px solid #7a6a45;
     overflow:hidden;
@@ -798,6 +810,11 @@
 
       <div class="waitingroom-col">
         <div class="waiting-room">
+          <div class="win98-titlebar">
+            <span>SALLE D'ATTENTE</span>
+            <span class="dots" aria-hidden="true"><span class="dot">_</span><span class="dot">×</span></span>
+          </div>
+          <div class="wr-inner">
           <div class="wr-board">
             <span>En cours</span>
             <span class="mono" id="queueNum">— — —</span>
@@ -821,6 +838,7 @@
               <div class="wr-leg wr-leg-l"></div>
               <div class="wr-leg wr-leg-r"></div>
             </div>
+          </div>
           </div>
         </div>
       </div>

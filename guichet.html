@@ -49,6 +49,9 @@
     --card-bg: #FFFFFF;
     --focus: #2A7FFE;
     --shadow: rgba(0,0,0,0.08);
+    /* hauteur commune aux deux boîtes de la scène (machine / salle d'attente),
+       pour qu'elles soient alignées en haut comme en bas */
+    --scene-box-h: 264px;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
@@ -185,8 +188,16 @@
   .guichet-scene{padding:34px 32px; margin:0 0 30px;}
   .guichet-scene > .eyebrow{display:block; margin-bottom:8px;}
   .guichet-title{font-size:1.7rem; white-space:nowrap; margin-bottom:30px;}
+  /* Les deux boîtes font la même largeur et la même hauteur, alignées en haut
+     comme en bas. Le padding-top identique des deux colonnes réserve la place
+     de la flèche « Cliquez ici » sans décaler la machine vers le bas. */
   .scene-row{display:flex; gap:40px; align-items:flex-start; flex-wrap:wrap;}
-  .machine-col{position:relative; flex:none; padding-top:44px;}
+  .machine-col{
+    position:relative;
+    flex:1 1 280px;
+    min-width:280px;
+    padding-top:44px;
+  }
 
   /* ---------- ticket machine: deliberately Windows 98 / retro kiosk ---------- */
   .ticket-arrow{
@@ -202,7 +213,10 @@
 
   .win98-machine{
     position:relative;
-    width:230px;
+    width:100%;
+    min-height:var(--scene-box-h);
+    display:flex;
+    flex-direction:column;
     background:#c0c0c0;
     border:2px solid;
     border-color:#fff #000 #000 #fff;
@@ -236,7 +250,7 @@
     border-color:#fff #000 #000 #fff;
     font-size:9px; line-height:10px; text-align:center; color:#000; font-weight:bold;
   }
-  .win98-body{padding:10px;}
+  .win98-body{padding:10px; flex:1; display:flex; flex-direction:column; justify-content:center;}
   .win98-screen{
     background:#0c0f0a;
     border:2px solid;
@@ -333,10 +347,16 @@
   .machine-note.prompt{color:var(--ochre-text); font-weight:700; margin-top:48px;}
 
   /* ---------- waiting room: simple retro pixel scene ---------- */
-  .waitingroom-col{flex:1; min-width:260px;}
+  .waitingroom-col{
+    flex:1 1 280px;
+    min-width:280px;
+    padding-top:44px;
+  }
   .waiting-room{
     width:100%;
-    max-width:320px;
+    min-height:var(--scene-box-h);
+    display:flex;
+    flex-direction:column;
     background:#232820;
     border:3px solid #12140f;
     border-radius:2px;
@@ -361,7 +381,8 @@
   }
   .wr-floor{
     position:relative;
-    height:170px;
+    flex:1;
+    min-height:170px;
     background:#c9b98a;
     border-top:4px solid #7a6a45;
     overflow:hidden;
@@ -558,6 +579,18 @@
     transition:transform 0.3s cubic-bezier(.2,.8,.3,1);
   }
   .overlay.open .modal{transform:scale(1) translateY(0);}
+  /* Ouverture façon vieux logiciel : la fenêtre arrive en tournant, comme un
+     zoom de Paint des années 90. */
+  @keyframes modalRetroIn{
+    0%   { opacity:0; transform:scale(0.15) rotate(-14deg); }
+    55%  { opacity:1; transform:scale(1.06) rotate(4deg); }
+    75%  { transform:scale(0.97) rotate(-2deg); }
+    90%  { transform:scale(1.01) rotate(1deg); }
+    100% { opacity:1; transform:scale(1) rotate(0deg); }
+  }
+  .overlay.open .modal{
+    animation:modalRetroIn 0.55s cubic-bezier(.2,.9,.3,1.1) both;
+  }
   .modal-top{
     display:flex; align-items:center; justify-content:space-between;
     margin-bottom:4px;
@@ -619,6 +652,17 @@
   .loss-row input, .loss-row select{width:auto; flex:1; min-width:0;}
   .loss-label{flex:none; width:52px; font-size:0.78rem; color:var(--ink-faint);}
   .loss-suffix{flex:none; font-weight:700; color:var(--ink-soft); padding:0 2px;}
+  .optional-tag{
+    margin-left:6px;
+    font-size:0.62rem;
+    font-weight:700;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    border:1px solid var(--line-strong);
+    border-radius:2px;
+    padding:1px 5px;
+  }
   .auth-area{display:flex; align-items:center; gap:10px;}
   .auth-username{font-size:0.85rem; font-weight:700; color:var(--ink); white-space:nowrap;}
   .auth-tabs{display:flex; gap:6px; margin-top:16px;}
@@ -835,32 +879,6 @@
       </div>
       <form class="dossier" id="dossierForm">
         <div class="field">
-          <label>Votre situation</label>
-          <div class="profile-toggle" role="radiogroup" aria-label="Type de situation">
-            <button type="button" class="profile-btn" id="profileIndividual" data-profile="individual" aria-pressed="true">👤&nbsp; Particulier</button>
-            <button type="button" class="profile-btn" id="profileProfessional" data-profile="professional" aria-pressed="false">🏢&nbsp; Professionnel</button>
-          </div>
-        </div>
-        <div class="field loss-fields" id="lossFields">
-          <label>Ce que ça vous a coûté</label>
-          <div class="loss-row">
-            <span class="loss-label">Temps</span>
-            <input id="fLossQty" type="number" min="0" step="0.5" placeholder="Quantité" aria-label="Temps perdu — quantité">
-            <select id="fLossUnit" aria-label="Temps perdu — unité">
-              <option value="">Unité</option>
-              <option value="heures">Heures</option>
-              <option value="jours">Jours</option>
-              <option value="semaines">Semaines</option>
-            </select>
-          </div>
-          <div class="loss-row">
-            <span class="loss-label">Argent</span>
-            <input id="fLossMoney" type="number" min="0" step="0.5" placeholder="Montant" aria-label="Argent perdu, en euros">
-            <span class="loss-suffix">€</span>
-          </div>
-          <p class="hint">Une estimation suffit — le temps perdu, c'est aussi de l'argent perdu.</p>
-        </div>
-        <div class="field">
           <label for="fTitle">Intitulé de votre galère</label>
           <input id="fTitle" type="text" maxlength="90" required placeholder="Ex. : Un formulaire pour obtenir un formulaire">
         </div>
@@ -878,8 +896,34 @@
           <p class="hint">Suggestion basée sur des mots-clés dans votre texte, pas une vraie IA — vous pouvez toujours changer.</p>
         </div>
         <div class="field">
+          <label>Votre situation</label>
+          <div class="profile-toggle" role="radiogroup" aria-label="Type de situation">
+            <button type="button" class="profile-btn" id="profileIndividual" data-profile="individual" aria-pressed="true">👤&nbsp; Particulier</button>
+            <button type="button" class="profile-btn" id="profileProfessional" data-profile="professional" aria-pressed="false">🏢&nbsp; Professionnel</button>
+          </div>
+        </div>
+        <div class="field">
           <label for="fCat">Administration concernée</label>
           <select id="fCat" required></select>
+        </div>
+        <div class="field loss-fields" id="lossFields">
+          <label>Ce que ça vous a coûté <span class="optional-tag">facultatif</span></label>
+          <div class="loss-row">
+            <span class="loss-label">Temps</span>
+            <input id="fLossQty" type="number" min="0" step="0.5" placeholder="Quantité" aria-label="Temps perdu — quantité">
+            <select id="fLossUnit" aria-label="Temps perdu — unité">
+              <option value="">Unité</option>
+              <option value="heures">Heures</option>
+              <option value="jours">Jours</option>
+              <option value="semaines">Semaines</option>
+            </select>
+          </div>
+          <div class="loss-row">
+            <span class="loss-label">Argent</span>
+            <input id="fLossMoney" type="number" min="0" step="0.5" placeholder="Montant" aria-label="Argent perdu, en euros">
+            <span class="loss-suffix">€</span>
+          </div>
+          <p class="hint">Une estimation suffit — le temps perdu, c'est aussi de l'argent perdu.</p>
         </div>
         <div class="field" id="nameField">
           <label for="fName">Votre nom ou pseudo</label>
@@ -1489,9 +1533,14 @@
     if (el) el.addEventListener("change", saveDraft);
   });
 
+  var overlayModalEl = overlay.querySelector(".modal");
   function openModal(){
     modalDefault.hidden = false;
     modalSuccess.hidden = true;
+    /* reflow : sans ça l'animation d'ouverture ne rejoue pas si la fenêtre a
+       déjà été ouverte une fois dans la session */
+    overlay.classList.remove("open");
+    void overlayModalEl.offsetWidth;
     overlay.classList.add("open");
     modalOpenedAt = Date.now();
     fTitle.focus();

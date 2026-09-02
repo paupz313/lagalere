@@ -651,7 +651,9 @@
   .hint.error{color:var(--stamp); font-weight:700;}
 
   .profile-toggle{display:flex; gap:8px;}
-  .profile-btn{
+  /* .choice-btn a le même rendu que .profile-btn mais une classe distincte :
+     partager la classe ferait aussi réagir le sélecteur particulier/pro. */
+  .profile-btn, .choice-btn{
     flex:1;
     font-family:inherit;
     font-weight:700;
@@ -663,7 +665,7 @@
     padding:10px 12px;
     cursor:pointer;
   }
-  .profile-btn[aria-pressed="true"]{
+  .profile-btn[aria-pressed="true"], .choice-btn[aria-pressed="true"]{
     background:var(--blue);
     color:#FFFFFF;
     border-color:var(--blue);
@@ -939,8 +941,15 @@
           <input id="fCatOther" type="text" maxlength="60" placeholder="Ex. : URSSAF Île-de-France">
           <p class="hint">Dites-nous laquelle — on l'ajoutera à la liste.</p>
         </div>
-        <div class="field loss-fields" id="lossFields">
-          <label>Ce que ça vous a coûté <span class="optional-tag">facultatif</span></label>
+        <div class="field">
+          <label>Voulez-vous estimer le temps ou l'argent perdu&nbsp;?</label>
+          <div class="profile-toggle" role="radiogroup" aria-label="Estimer ce que ça vous a coûté">
+            <button type="button" class="choice-btn" id="lossYes" data-loss="yes" aria-pressed="false">Oui</button>
+            <button type="button" class="choice-btn" id="lossNo" data-loss="no" aria-pressed="false">Non, passer</button>
+          </div>
+        </div>
+        <div class="field loss-fields" id="lossFields" hidden>
+          <label>Ce que ça vous a coûté</label>
           <div class="loss-row">
             <span class="loss-label">Temps</span>
             <input id="fLossQty" type="number" min="0" step="0.5" placeholder="Quantité" aria-label="Temps perdu — quantité">
@@ -1524,6 +1533,22 @@
   });
   /* « Autre » ne dit pas QUELLE administration : sans ce champ, l'info est
      perdue et la liste ne peut jamais s'enrichir. */
+  /* Les champs de coût ne s'affichent que si le visiteur dit « Oui » : ouvrir
+     le formulaire sur une grille de chiffres à remplir décourage. */
+  var lossFieldsEl = document.getElementById("lossFields");
+  var lossBtns = [document.getElementById("lossYes"), document.getElementById("lossNo")];
+  var lossWanted = null;
+  function setLossWanted(choice){
+    lossWanted = choice;
+    lossBtns.forEach(function(b){ b.setAttribute("aria-pressed", String(b.getAttribute("data-loss") === choice)); });
+    lossFieldsEl.hidden = choice !== "yes";
+    if (choice !== "yes"){ fLossQty.value = ""; fLossUnit.value = ""; fLossMoney.value = ""; }
+    saveDraft();
+  }
+  lossBtns.forEach(function(b){
+    b.addEventListener("click", function(){ setLossWanted(b.getAttribute("data-loss")); });
+  });
+
   var catOtherField = document.getElementById("catOtherField");
   var fCatOther = document.getElementById("fCatOther");
   function syncCatOther(){
@@ -1545,6 +1570,7 @@
     if (!fTitle.value && !fBody.value && !fLossQty.value && !fLossMoney.value) return;
     safeSet(LS_DRAFT, {
       profileType: profileType,
+      lossWanted: lossWanted,
       lossQty: fLossQty.value,
       lossUnit: fLossUnit.value,
       lossMoney: fLossMoney.value,
@@ -1561,6 +1587,7 @@
     var d = safeGet(LS_DRAFT);
     if (!d) return false;
     if (d.profileType) setProfileType(d.profileType);
+    if (d.lossWanted) setLossWanted(d.lossWanted);
     fLossQty.value = d.lossQty || "";
     fLossUnit.value = d.lossUnit || "";
     fLossMoney.value = d.lossMoney || "";
@@ -1680,6 +1707,8 @@
       clearDraft();
       dossierForm.reset();
       setProfileType("individual");
+      setLossWanted(null);
+      syncCatOther();
       modalDefault.hidden = true;
       modalSuccess.hidden = false;
     } catch(err){

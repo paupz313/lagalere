@@ -417,6 +417,31 @@
     transition:opacity 0.3s;
   }
   .wr-status.show{opacity:1;}
+  /* Sans ça, un visiteur qui fait défiler jusqu'à la salle d'attente tombe sur
+     une boîte inerte sans comprendre qu'il doit d'abord prendre un ticket —
+     surtout sur mobile, où les deux boîtes sont empilées. */
+  .wr-idle{
+    position:absolute;
+    top:50%; left:10px; right:10px;
+    transform:translateY(-50%);
+    z-index:6;
+    text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:700;
+    font-size:0.82rem;
+    letter-spacing:0.03em;
+    color:#ffb020;
+    background:rgba(12,15,10,0.92);
+    border:1px solid #3a3a3a;
+    border-radius:3px;
+    padding:8px 10px;
+  }
+  .wr-idle::before{content:"\2190\00a0";}
+  .wr-idle[hidden]{display:none;}
+  @media (max-width: 620px){
+    /* empilées : la machine est au-dessus, pas à gauche */
+    .wr-idle::before{content:"\2191\00a0";}
+  }
   .wr-chair{
     position:absolute;
     bottom:8px;
@@ -832,6 +857,7 @@
             <span class="mono" id="queueNum">— — —</span>
           </div>
           <div class="wr-floor">
+            <div class="wr-idle" id="wrIdle">Prenez d'abord un ticket</div>
             <div class="wr-status" id="wrStatus"></div>
             <div class="wr-plant" id="wrPlant" aria-hidden="true"></div>
             <div class="wr-crowd" id="wrCrowd" aria-hidden="true">
@@ -1849,6 +1875,8 @@
   }
 
   function runWaitingRoom(userNum){
+    var idleEl = document.getElementById("wrIdle");
+    if (idleEl) idleEl.hidden = true;
     wrCrowdEl.classList.remove("gone");
     wrPlantEl.classList.remove("wilted");
     personEl.hidden = false;

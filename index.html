@@ -301,7 +301,9 @@
     padding:26px 0 14px;
     display:flex; flex-direction:column; gap:12px;
   }
-  .toolbar-top{display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap;}
+  /* la recherche et le filtre occupent la même largeur et s'alignent sur les
+     bords des onglets au-dessus, sinon la deuxième ligne paraît décalée */
+  .toolbar-top{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
   .tabs{display:flex; gap:8px;}
   .tab{
     flex:1;
@@ -333,7 +335,8 @@
     padding:8px 10px;
     vertical-align:middle;
   }
-  .search-wrap{position:relative; width:220px; max-width:100%; flex:0 1 220px;}
+  .search-wrap{position:relative; flex:1 1 200px; min-width:0;}
+  select.filter{flex:1 1 200px; min-width:0; width:auto;}
   .search-wrap svg{
     position:absolute;
     left:10px; top:50%;
@@ -535,6 +538,30 @@
     font-size:0.82rem;
   }
 
+  /* ---------- contact ---------- */
+  .contact{padding:32px; margin:0 0 30px; border-left:4px solid var(--blue);}
+  .contact h2{font-size:1.4rem; font-weight:700; margin:6px 0 8px;}
+  .contact-lede{color:var(--ink-soft); margin:0 0 18px; max-width:52ch;}
+  .contact-row{display:flex; gap:12px; flex-wrap:wrap;}
+  .contact-row .field{flex:1 1 200px; min-width:0;}
+  .contact textarea{
+    width:100%;
+    min-height:120px;
+    resize:vertical;
+    font-family:'Marianne', arial, sans-serif;
+    font-size:0.95rem;
+    color:var(--ink);
+    background:var(--paper-raised);
+    border:1px solid var(--line-strong);
+    border-radius:2px;
+    padding:10px 12px;
+    box-sizing:border-box;
+  }
+  .contact textarea:focus{outline:2px solid var(--focus); outline-offset:1px;}
+  .contact-actions{display:flex; justify-content:flex-end; margin-top:16px;}
+  /* pot de miel : invisible pour un humain, rempli par les robots */
+  .hp-field{position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden;}
+
   /* ---------- auth modal ---------- */
   .overlay{
     position:fixed; inset:0;
@@ -649,7 +676,10 @@
     <div class="wordmark">
       <span class="name">Quelle Galère !</span>
     </div>
-    <div class="auth-area" id="authArea"></div>
+    <div class="auth-area">
+      <a class="btn ghost small" href="#contact">Aide</a>
+      <span id="authArea" class="auth-area"></span>
+    </div>
   </div>
 </header>
 
@@ -769,6 +799,37 @@
     <h2>On commence simple, exprès.</h2>
     <p>Il n'existait pas vraiment, en France, d'endroit pensé pour ça : drôle, communautaire, fait pour écrire plutôt que pour remplir un formulaire de plus. Alors on commence petit — un défouloir, des catégories posées à la main, un bouton pour dire « vécu aussi ». Rien d'automatique, rien qui vous profile.</p>
     <p>Si ça prend racine, la suite pourra faire plus : croiser vos dossiers avec ce qui se discute à l'Assemblée, prévenir votre élu qu'un texte vous concerne. Pour l'instant, la seule question qui compte est plus simple : est-ce que vous avez envie de revenir raconter la prochaine ?</p>
+  </section>
+
+  <section class="contact paper-panel" id="contact">
+    <p class="eyebrow">Besoin d'aide&nbsp;?</p>
+    <h2>Une question, un souci, une erreur&nbsp;?</h2>
+    <p class="contact-lede">Écrivez-nous — un vrai humain lit, et il n'y a pas de numéro de dossier à fournir.</p>
+    <form id="contactForm">
+      <div class="contact-row">
+        <div class="field">
+          <label for="cName">Votre nom</label>
+          <input id="cName" type="text" maxlength="60" placeholder="Facultatif">
+        </div>
+        <div class="field">
+          <label for="cEmail">Votre email</label>
+          <input id="cEmail" type="email" maxlength="120" placeholder="Pour qu'on puisse répondre">
+        </div>
+      </div>
+      <div class="field">
+        <label for="cBody">Votre message</label>
+        <textarea id="cBody" maxlength="2000" required placeholder="Dites-nous ce qui se passe."></textarea>
+      </div>
+      <div class="field hp-field" aria-hidden="true">
+        <label for="cWebsite">Laissez ce champ vide</label>
+        <input id="cWebsite" type="text" tabindex="-1" autocomplete="off">
+      </div>
+      <p class="hint error" id="contactError" hidden></p>
+      <p class="hint" id="contactNotice" hidden></p>
+      <div class="contact-actions">
+        <button type="submit" class="btn" id="contactSubmit">Envoyer</button>
+      </div>
+    </form>
   </section>
 
   <footer>
@@ -1511,6 +1572,55 @@
       render();
     });
   });
+
+  /* ---------- formulaire de contact ---------- */
+  var contactForm = document.getElementById("contactForm");
+  if (contactForm){
+    var cName = document.getElementById("cName");
+    var cEmail = document.getElementById("cEmail");
+    var cBody = document.getElementById("cBody");
+    var cWebsite = document.getElementById("cWebsite");
+    var contactError = document.getElementById("contactError");
+    var contactNotice = document.getElementById("contactNotice");
+    var contactSubmit = document.getElementById("contactSubmit");
+
+    contactForm.addEventListener("submit", async function(e){
+      e.preventDefault();
+      contactError.hidden = true;
+      contactNotice.hidden = true;
+      /* pot de miel : un vrai visiteur ne remplit jamais ce champ */
+      if (cWebsite.value.trim() !== ""){ contactForm.reset(); return; }
+      var body = cBody.value.trim();
+      if (!body){
+        contactError.textContent = "Merci d'écrire votre message.";
+        contactError.hidden = false;
+        return;
+      }
+      if (!sb){
+        contactError.textContent = "Envoi indisponible pour le moment.";
+        contactError.hidden = false;
+        return;
+      }
+      contactSubmit.disabled = true;
+      try{
+        var res = await sb.from("messages").insert({
+          name: cName.value.trim() || null,
+          email: cEmail.value.trim() || null,
+          body: body,
+          user_id: currentUserId || null
+        });
+        if (res.error) throw res.error;
+        contactForm.reset();
+        contactNotice.textContent = "Message envoyé — merci ! On revient vers vous si vous avez laissé un email.";
+        contactNotice.hidden = false;
+      } catch(err){
+        console.error("Quelle Galère — échec de l'envoi du message :", err);
+        contactError.textContent = "L'envoi a échoué. Réessayez dans un instant.";
+        contactError.hidden = false;
+      }
+      contactSubmit.disabled = false;
+    });
+  }
 
   ensureSession().then(loadDossiers);
 })();

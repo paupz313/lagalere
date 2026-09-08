@@ -759,6 +759,20 @@
     color:var(--ink-soft);
     margin-bottom:6px;
   }
+  /* Sortie de secours discrète : visible pour qui la cherche, sans concurrencer
+     le bouton « Prendre un ticket ». */
+  .skip-row{margin:22px 0 0; text-align:center;}
+  .skip-link{
+    background:none;
+    border:none;
+    padding:4px;
+    font-family:inherit;
+    font-size:0.78rem;
+    color:var(--ink-faint);
+    text-decoration:underline;
+    cursor:pointer;
+  }
+  .skip-link:hover{color:var(--blue);}
   .signed-in-name{
     margin:0;
     font-weight:700;
@@ -884,6 +898,9 @@
         </div>
       </div>
     </div>
+    <p class="skip-row">
+      <button type="button" class="skip-link" id="skipAnimation">Passer l'animation et déposer directement&nbsp;→</button>
+    </p>
   </section>
 </main>
 
@@ -1293,7 +1310,7 @@
     }
     var help = document.createElement("a");
     help.className = "btn ghost small";
-    help.href = "index.html#contact";
+    help.href = "contact.html";
     help.textContent = "Aide";
     authArea.appendChild(help);
     var back = document.createElement("a");
@@ -1641,6 +1658,14 @@
   });
 
   var overlayModalEl = overlay.querySelector(".modal");
+  /* Quand on passe l'animation, les minuteries de la salle d'attente continuent
+     de tourner : sans ce drapeau, elles rouvriraient la fenêtre (et rejoueraient
+     son animation) alors que le visiteur est déjà en train d'écrire. */
+  var animationSkipped = false;
+  function autoOpenModal(){
+    if (animationSkipped) return;
+    openModal();
+  }
   function openModal(){
     modalDefault.hidden = false;
     modalSuccess.hidden = true;
@@ -1656,6 +1681,13 @@
     saveDraft();
     overlay.classList.remove("open");
     hideError();
+  }
+  var skipBtn = document.getElementById("skipAnimation");
+  if (skipBtn){
+    skipBtn.addEventListener("click", function(){
+      animationSkipped = true;
+      openModal();
+    });
   }
   document.getElementById("closeModal").addEventListener("click", closeModal);
   document.getElementById("cancelForm").addEventListener("click", closeModal);
@@ -1970,7 +2002,7 @@
         setTimeout(function(){
           hideHeadEmoji();
           personEl.className = "wr-person peering";
-          setTimeout(openModal, 900);
+          setTimeout(autoOpenModal, 900);
         }, 900);
       }, 1300);
     }, 1350);

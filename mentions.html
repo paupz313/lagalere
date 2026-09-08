@@ -1,0 +1,170 @@
+<!--
+  QUELLE GALÈRE ! — mentions légales & vie privée
+  Page volontairement courte : elle décrit ce que le site fait réellement
+  (voir dossiers / profiles / messages dans Supabase), pas un modèle générique.
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quelle Galère ! — Mentions légales</title>
+<style>
+  @font-face{
+    font-family:"Marianne"; font-style:normal; font-weight:400; font-display:swap;
+    src:url("https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.15.2/dist/fonts/Marianne-Regular.woff2") format("woff2");
+  }
+  @font-face{
+    font-family:"Marianne"; font-style:normal; font-weight:700; font-display:swap;
+    src:url("https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.15.2/dist/fonts/Marianne-Bold.woff2") format("woff2");
+  }
+
+  :root{
+    --paper: #FFFFFF;
+    --paper-raised: #F6F6F6;
+    --ink: #161616;
+    --ink-soft: #3A3A3A;
+    --ink-faint: #666666;
+    --blue: #000091;
+    --blue-hover: #1212FF;
+    --stamp: #E1000F;
+    --line: #DDDDDD;
+    --line-strong: #3A3A3A;
+    --card-bg: #FFFFFF;
+    --focus: #2A7FFE;
+    --shadow: rgba(0,0,0,0.08);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper: #161616;
+      --paper-raised: #1E1E1E;
+      --ink: #FFFFFF;
+      --ink-soft: #CECECE;
+      --ink-faint: #929292;
+      --blue: #8585F6;
+      --blue-hover: #B1B1F9;
+      --stamp: #FF5655;
+      --line: #353535;
+      --line-strong: #CECECE;
+      --card-bg: #1E1E1E;
+      --focus: #2A7FFE;
+      --shadow: rgba(0,0,0,0.5);
+    }
+  }
+
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Marianne', arial, sans-serif;
+    font-size:16px;
+    line-height:1.6;
+  }
+  h1,h2{font-family:'Marianne', arial, sans-serif; margin:0; color:var(--ink); text-wrap:balance;}
+  a{color:var(--blue);}
+  a:hover{color:var(--blue-hover);}
+  :focus-visible{outline:2px solid var(--focus); outline-offset:2px;}
+
+  .tricolor-bar{height:4px; background:linear-gradient(to right, var(--blue) 0 33.33%, #FFFFFF 33.33% 66.66%, var(--stamp) 66.66% 100%);}
+  .wrap{max-width:760px; margin:0 auto; padding:0 24px;}
+
+  header.site{
+    border-bottom:1px solid var(--line);
+    padding:18px 0;
+    background:var(--paper);
+  }
+  header.site .wrap{display:flex; align-items:center; justify-content:space-between; gap:16px;}
+  .wordmark .name{font-weight:700; font-size:1.35rem; letter-spacing:-0.01em;}
+  .btn{
+    font-weight:700; font-size:0.78rem;
+    border:1px solid var(--blue); background:transparent; color:var(--blue);
+    padding:6px 11px; border-radius:2px; cursor:pointer; white-space:nowrap;
+    text-decoration:none;
+  }
+  .btn:hover{border-color:var(--blue-hover); color:var(--blue-hover);}
+
+  main.wrap{padding-top:30px; padding-bottom:60px;}
+  .eyebrow{
+    display:block;
+    font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--blue); font-weight:700; margin-bottom:8px;
+  }
+  h1{font-size:1.9rem; font-weight:700; line-height:1.15; margin-bottom:10px;}
+  .lede{color:var(--ink-soft); margin:0 0 30px; font-size:1.05rem;}
+  section.block{
+    background:var(--card-bg);
+    border:1px solid var(--line);
+    border-left:4px solid var(--blue);
+    border-radius:2px;
+    padding:22px 24px;
+    margin:0 0 18px;
+  }
+  section.block h2{font-size:1.15rem; font-weight:700; margin-bottom:8px;}
+  section.block p{margin:0 0 10px; color:var(--ink-soft);}
+  section.block p:last-child{margin-bottom:0;}
+  section.block ul{margin:0 0 10px; padding-left:20px; color:var(--ink-soft);}
+  section.block li{margin-bottom:6px;}
+  .updated{font-size:0.8rem; color:var(--ink-faint); margin-top:24px;}
+  footer{padding:22px 4px 40px;}
+  footer p{font-size:0.78rem; color:var(--ink-faint); max-width:60ch; margin:0;}
+</style>
+
+<div class="tricolor-bar" aria-hidden="true"></div>
+
+<header class="site">
+  <div class="wrap">
+    <div class="wordmark"><span class="name">Quelle Galère !</span></div>
+    <a class="btn" href="index.html">← Retour</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <span class="eyebrow">Informations légales</span>
+  <h1>Mentions légales &amp; vie privée</h1>
+  <p class="lede">Court, parce qu'il n'y a pas grand-chose à dire : ce site stocke le minimum et ne revend rien.</p>
+
+  <section class="block">
+    <h2>Ce que c'est</h2>
+    <p>Quelle Galère&nbsp;! est un projet citoyen indépendant, tenu par un particulier. Il n'est affilié à aucune administration, aucun ministère et aucun service public. La ressemblance avec un vrai guichet est volontaire&nbsp;: c'est une satire.</p>
+    <p>Rien de ce qui est publié ici n'a de valeur administrative ou juridique. Déposer un dossier sur ce site ne remplace aucune démarche réelle et n'engage aucune administration.</p>
+  </section>
+
+  <section class="block">
+    <h2>Éditeur et hébergement</h2>
+    <p><strong>Éditeur&nbsp;:</strong> particulier, joignable via le <a href="index.html#contact">formulaire de contact</a>.</p>
+    <p><strong>Hébergement&nbsp;:</strong> Netlify, Inc., 512 2nd Street, Suite 200, San Francisco, CA 94107, États-Unis.</p>
+    <p><strong>Base de données&nbsp;:</strong> Supabase, hébergement des données dans l'Union européenne (région eu-west-3, Paris).</p>
+  </section>
+
+  <section class="block">
+    <h2>Les données qu'on garde</h2>
+    <p>Uniquement ce qui fait fonctionner le site&nbsp;:</p>
+    <ul>
+      <li><strong>Vos dossiers</strong>&nbsp;: le titre, le récit, l'administration concernée, le pseudo affiché, et l'estimation de temps ou d'argent si vous avez choisi d'en donner une.</li>
+      <li><strong>Votre compte</strong>, si vous en créez un&nbsp;: une adresse email et un pseudo. L'email sert à vous connecter et à réinitialiser votre mot de passe, rien d'autre.</li>
+      <li><strong>Vos messages</strong> envoyés via le formulaire de contact.</li>
+      <li><strong>Vos votes</strong>, rattachés à votre session pour éviter de voter deux fois.</li>
+    </ul>
+    <p>Il n'y a ni traceur publicitaire, ni mesure d'audience, ni revente, ni partage avec des tiers. Le site dépose seulement ce qu'il faut pour fonctionner&nbsp;: votre session, votre brouillon en cours d'écriture, et un identifiant de vote — tout cela reste dans votre navigateur.</p>
+    <p>Vous pouvez écrire sans compte&nbsp;: dans ce cas, aucune adresse email n'est demandée.</p>
+  </section>
+
+  <section class="block">
+    <h2>Effacer vos données</h2>
+    <p>Écrivez via le <a href="index.html#contact">formulaire de contact</a> en indiquant le pseudo ou l'email concerné, et tout est supprimé — dossiers, compte, messages. Pas de justificatif à fournir, pas de formulaire à remplir en trois exemplaires. C'était un peu l'idée du site.</p>
+    <p>Conformément au RGPD, vous pouvez aussi demander l'accès à vos données ou leur rectification par le même canal.</p>
+  </section>
+
+  <section class="block">
+    <h2>Modération</h2>
+    <p>Les dossiers sont publics. Merci de raconter votre expérience sans nommer d'agent public, sans coordonnées personnelles (les vôtres ou celles d'autrui) et sans insulte. Un filtre automatique bloque déjà une partie de ces cas au moment de la publication.</p>
+    <p>Tout contenu diffamatoire, haineux, ou publiant des données personnelles peut être retiré sans préavis. Si un contenu vous concerne et vous pose problème, signalez-le via le formulaire de contact&nbsp;: il sera examiné et retiré s'il le faut.</p>
+  </section>
+
+  <p class="updated">Dernière mise à jour&nbsp;: septembre 2026.</p>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Quelle Galère&nbsp;! est un projet citoyen indépendant, pensé et tenu par des particuliers. Il n'est affilié à aucune administration, ministère ou service public réel. Les tampons ne valent rien devant un tribunal.</p>
+  </div>
+</footer>

@@ -116,7 +116,9 @@
   .field textarea{min-height:150px; resize:vertical;}
   .field input:focus, .field textarea:focus{outline:2px solid var(--focus); outline-offset:1px;}
   .row{display:flex; gap:12px; flex-wrap:wrap;}
-  .row .field{flex:1 1 200px; min-width:0;}
+  /* sans margin-top:0, seul le premier champ de la ligne est remis à zéro par
+     .field:first-child et le second descend de 16px */
+  .row .field{flex:1 1 200px; min-width:0; margin-top:0;}
   .actions{display:flex; justify-content:flex-end; margin-top:20px;}
   .hint{font-size:0.8rem; color:var(--ink-faint); margin:10px 0 0;}
   .hint.error{color:var(--stamp); font-weight:700;}

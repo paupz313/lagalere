@@ -715,8 +715,16 @@
     border-radius:2px;
     padding:1px 5px;
   }
-  .auth-area{display:flex; align-items:center; gap:10px;}
+  .auth-area{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
   .auth-username{font-size:0.85rem; font-weight:700; color:var(--ink); white-space:nowrap;}
+  /* même correctif que sur l'accueil : trois boutons ne tiennent pas à côté
+     du logo sur mobile */
+  @media (max-width: 620px){
+    header.site .wrap{flex-wrap:wrap; row-gap:10px;}
+    .wordmark{flex:1 1 100%;}
+    .wordmark .name{white-space:nowrap;}
+    .auth-area{flex:1 1 100%; gap:8px;}
+  }
   .auth-tabs{display:flex; gap:6px; margin-top:16px;}
   .tab{
     font-size:0.78rem;
@@ -1308,6 +1316,11 @@
       span.textContent = "👋 " + (currentUsername || "Vous");
       authArea.appendChild(span);
     }
+    var prio = document.createElement("a");
+    prio.className = "btn ghost small";
+    prio.href = "mandat.html";
+    prio.textContent = "Vos 5 priorités";
+    authArea.appendChild(prio);
     var help = document.createElement("a");
     help.className = "btn ghost small";
     help.href = "contact.html";

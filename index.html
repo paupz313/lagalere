@@ -182,8 +182,16 @@
   .btn[disabled]{opacity:0.6; cursor:default;}
   .btn.small{font-size:0.78rem; padding:6px 11px;}
 
-  .auth-area{display:flex; align-items:center; gap:10px;}
+  .auth-area{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
   .auth-username{font-size:0.85rem; font-weight:700; color:var(--ink); white-space:nowrap;}
+  /* Sur petit écran les boutons de navigation écrasaient le logo (coupé en
+     trois lignes) et débordaient à droite : on passe l'en-tête sur deux rangs. */
+  @media (max-width: 620px){
+    header.site .wrap{flex-wrap:wrap; row-gap:10px;}
+    .wordmark{flex:1 1 100%;}
+    .wordmark .name{white-space:nowrap;}
+    .auth-area{flex:1 1 100%; gap:8px;}
+  }
 
   /* ---------- panel ---------- */
   .paper-panel{
@@ -656,6 +664,7 @@
       <span class="name">Quelle Galère !</span>
     </div>
     <div class="auth-area">
+      <a class="btn ghost small" href="mandat.html">Vos 5 priorités</a>
       <a class="btn ghost small" href="contact.html">Aide</a>
       <span id="authArea" class="auth-area"></span>
     </div>

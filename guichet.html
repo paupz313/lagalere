@@ -1,7 +1,7 @@
 <!--
   LA GALÈRE — guichet
   Page dédiée au dépôt d'un dossier : machine à ticket (délibérément Windows 98),
-  petite salle d'attente animée, puis le formulaire. Voir index.html pour la
+  petite salle d'attente animée, puis le formulaire. Voir galeres.html pour la
   configuration Supabase (les mêmes clés sont utilisées ici).
 -->
 <meta charset="utf-8">
@@ -826,7 +826,7 @@
   <div class="wrap">
     <div class="wordmark"><span class="name">Quelle Galère !</span></div>
     <div class="auth-area" id="authArea">
-      <a class="btn ghost small" href="index.html">← Retour</a>
+      <a class="btn ghost small" href="galeres.html">← Retour</a>
     </div>
   </div>
 </header>
@@ -1046,7 +1046,7 @@
       <span class="eyebrow">Dossier reçu</span>
       <h2>Merci, c'est enregistré !</h2>
       <p>Votre galère est maintenant dans la file, prête à être tamponnée par d'autres.</p>
-      <a class="btn" href="index.html">Retour à l'accueil</a>
+      <a class="btn" href="galeres.html">Voir le mur des dossiers</a>
     </div>
   </div>
 </div>
@@ -1316,11 +1316,6 @@
       span.textContent = "👋 " + (currentUsername || "Vous");
       authArea.appendChild(span);
     }
-    var prio = document.createElement("a");
-    prio.className = "btn ghost small";
-    prio.href = "mandat.html";
-    prio.textContent = "Vos 5 priorités";
-    authArea.appendChild(prio);
     var help = document.createElement("a");
     help.className = "btn ghost small";
     help.href = "contact.html";
@@ -1328,7 +1323,7 @@
     authArea.appendChild(help);
     var back = document.createElement("a");
     back.className = "btn ghost small";
-    back.href = "index.html";
+    back.href = "galeres.html";
     back.textContent = "← Retour";
     authArea.appendChild(back);
   }

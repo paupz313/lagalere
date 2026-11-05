@@ -1,0 +1,463 @@
+<!--
+  QUELLE GALÈRE ! — « Si vous étiez président »
+  Exercice volontairement séparé du mur des galères : cinq priorités, une par
+  année de quinquennat. L'ordre EST la réponse — c'est la contrainte qui oblige
+  à arbitrer. Insertion avec la clé anon (policy INSERT sur mandats, aucune
+  policy SELECT), donc aucune session requise.
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quelle Galère ! — Si vous étiez président</title>
+<style>
+  @font-face{
+    font-family:"Marianne"; font-style:normal; font-weight:400; font-display:swap;
+    src:url("https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.15.2/dist/fonts/Marianne-Regular.woff2") format("woff2");
+  }
+  @font-face{
+    font-family:"Marianne"; font-style:normal; font-weight:700; font-display:swap;
+    src:url("https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.15.2/dist/fonts/Marianne-Bold.woff2") format("woff2");
+  }
+
+  :root{
+    --paper:#FFFFFF; --paper-raised:#F6F6F6;
+    --ink:#161616; --ink-soft:#3A3A3A; --ink-faint:#666666;
+    --blue:#000091; --blue-hover:#1212FF; --blue-soft:#E3E3FD;
+    --stamp:#E1000F;
+    --line:#DDDDDD; --line-strong:#3A3A3A;
+    --card-bg:#FFFFFF; --focus:#2A7FFE; --shadow:rgba(0,0,0,0.08);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#161616; --paper-raised:#1E1E1E;
+      --ink:#FFFFFF; --ink-soft:#CECECE; --ink-faint:#929292;
+      --blue:#8585F6; --blue-hover:#B1B1F9; --blue-soft:#272747;
+      --stamp:#FF5655;
+      --line:#353535; --line-strong:#CECECE;
+      --card-bg:#1E1E1E; --focus:#2A7FFE; --shadow:rgba(0,0,0,0.5);
+    }
+  }
+
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Marianne', arial, sans-serif; font-size:16px; line-height:1.6;
+  }
+  h1,h2{margin:0; color:var(--ink); text-wrap:balance;}
+  a{color:var(--blue);} a:hover{color:var(--blue-hover);}
+  :focus-visible{outline:2px solid var(--focus); outline-offset:2px;}
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+
+  .tricolor-bar{height:4px; background:linear-gradient(to right, var(--blue) 0 33.33%, #FFFFFF 33.33% 66.66%, var(--stamp) 66.66% 100%);}
+  .wrap{max-width:760px; margin:0 auto; padding:0 24px;}
+
+  header.site{border-bottom:1px solid var(--line); padding:18px 0; background:var(--paper);}
+  header.site .wrap{display:flex; align-items:center; justify-content:space-between; gap:16px;}
+  .wordmark .name{font-weight:700; font-size:1.35rem; letter-spacing:-0.01em;}
+  .btn{
+    font-weight:700; font-size:0.92rem;
+    border:1px solid var(--blue); background:var(--blue); color:#FFFFFF;
+    padding:10px 16px; border-radius:2px; cursor:pointer; white-space:nowrap;
+    text-decoration:none; font-family:inherit;
+  }
+  .btn:hover{background:var(--blue-hover); border-color:var(--blue-hover);}
+  .btn[disabled]{opacity:0.6; cursor:default;}
+  .btn.ghost{background:transparent; color:var(--blue); font-size:0.78rem; padding:6px 11px;}
+  .btn.ghost:hover{background:transparent; color:var(--blue-hover); border-color:var(--blue-hover);}
+
+  main.wrap{padding-top:30px; padding-bottom:60px;}
+  .eyebrow{
+    display:block; font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--blue); font-weight:700; margin-bottom:8px;
+  }
+  h1{font-size:1.9rem; font-weight:700; line-height:1.15; margin-bottom:10px;}
+  .lede{color:var(--ink-soft); margin:0 0 8px; font-size:1.05rem; max-width:58ch;}
+  .rule{color:var(--ink-faint); font-size:0.9rem; margin:0 0 26px; max-width:58ch;}
+
+  .panel{
+    background:var(--card-bg); border:1px solid var(--line);
+    border-left:4px solid var(--blue); border-radius:2px;
+    padding:26px 28px;
+  }
+  .panel h2{font-size:1.1rem; font-weight:700; margin-bottom:4px;}
+  .panel .sub{color:var(--ink-faint); font-size:0.85rem; margin:0 0 18px;}
+
+  /* ---- les cinq années ---- */
+  .years{list-style:none; margin:0; padding:0;}
+  .year{
+    display:flex; align-items:center; gap:12px;
+    background:var(--paper-raised);
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:10px 12px;
+    margin-bottom:10px;
+  }
+  .year.dragging{opacity:0.45;}
+  .year.dragover{border-color:var(--blue); border-style:dashed;}
+  .year-badge{
+    flex:none; width:74px;
+    font-size:0.7rem; font-weight:700; letter-spacing:0.05em; text-transform:uppercase;
+    color:var(--blue);
+  }
+  .year input{
+    flex:1; min-width:0;
+    font-family:'Marianne', arial, sans-serif; font-size:0.95rem;
+    color:var(--ink); background:var(--card-bg);
+    border:1px solid var(--line-strong); border-radius:2px;
+    padding:9px 11px;
+  }
+  .year input:focus{outline:2px solid var(--focus); outline-offset:1px;}
+  .year-moves{flex:none; display:flex; flex-direction:column; gap:2px;}
+  .move{
+    background:none; border:1px solid var(--line);
+    color:var(--ink-soft); font-family:inherit; font-size:0.65rem; line-height:1;
+    border-radius:2px; padding:3px 6px; cursor:pointer;
+  }
+  .move:hover:not([disabled]){border-color:var(--blue); color:var(--blue);}
+  .move[disabled]{opacity:0.3; cursor:default;}
+  .grip{
+    flex:none; color:var(--ink-faint); cursor:grab;
+    font-size:0.95rem; line-height:1; padding:0 2px; user-select:none;
+  }
+  .counter{font-size:0.72rem; color:var(--ink-faint); text-align:right; margin:-4px 0 18px;}
+
+  /* ---- curseur politique ---- */
+  .slider-block{margin-top:26px; padding-top:22px; border-top:1px solid var(--line);}
+  .slider-row{display:flex; align-items:center; gap:12px; margin-top:12px;}
+  .slider-row input[type=range]{flex:1; min-width:0; accent-color:var(--blue);}
+  .slider-ends{display:flex; justify-content:space-between; font-size:0.72rem; color:var(--ink-faint); margin-top:4px;}
+  .slider-value{
+    flex:none; min-width:120px; text-align:right;
+    font-size:0.82rem; font-weight:700; color:var(--ink-soft);
+  }
+  .slider-reset{
+    background:none; border:none; padding:0; margin-top:8px;
+    font-family:inherit; font-size:0.76rem; color:var(--blue);
+    text-decoration:underline; cursor:pointer;
+  }
+
+  .actions{display:flex; justify-content:flex-end; margin-top:24px;}
+  .hint{font-size:0.8rem; color:var(--ink-faint); margin:12px 0 0;}
+  .hint.error{color:var(--stamp); font-weight:700;}
+  .hp-field{position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden;}
+
+  /* ---- merci ---- */
+  .thanks{text-align:center; padding:14px 0 6px;}
+  .thanks h2{font-size:1.3rem; margin-bottom:10px;}
+  .thanks p{color:var(--ink-soft); margin:0 auto 18px; max-width:46ch;}
+  .recap{list-style:none; margin:0 auto 20px; padding:0; max-width:420px; text-align:left;}
+  .recap li{
+    display:flex; gap:10px; padding:8px 12px; margin-bottom:6px;
+    background:var(--blue-soft); border-radius:2px; font-size:0.9rem;
+  }
+  .recap .y{flex:none; font-weight:700; color:var(--blue); width:64px;}
+
+  footer{padding:22px 4px 40px;}
+  footer p{font-size:0.78rem; color:var(--ink-faint); max-width:60ch; margin:0;}
+  .footer-links{margin-top:10px;}
+  .footer-links a{color:var(--blue); text-decoration:underline;}
+
+  @media (max-width: 560px){
+    .year{flex-wrap:wrap;}
+    .year-badge{width:100%;}
+    .year input{flex:1 1 100%; order:3;}
+    .year-moves{order:2; flex-direction:row;}
+    .grip{display:none;}
+    .slider-value{min-width:0; width:100%; text-align:left;}
+    .slider-row{flex-wrap:wrap;}
+  }
+</style>
+
+<div class="tricolor-bar" aria-hidden="true"></div>
+
+<header class="site">
+  <div class="wrap">
+    <div class="wordmark"><span class="name">Quelle Galère !</span></div>
+    <a class="btn ghost" href="index.html">← Retour</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <span class="eyebrow">Le grand arbitrage</span>
+  <h1>Si vous étiez président, cinq ans, cinq priorités</h1>
+  <p class="lede">Un quinquennat, cinq années. Une priorité par année — pas une de plus.</p>
+  <p class="rule">La règle est volontairement dure&nbsp;: une phrase courte par priorité, et surtout un ordre. Ce que vous mettez en année&nbsp;1, vous ne le mettez pas en année&nbsp;5. C'est là que ça devient intéressant.</p>
+
+  <div class="panel" id="formPanel">
+    <h2>Vos cinq priorités</h2>
+    <p class="sub">Glissez les lignes pour les réordonner, ou utilisez les flèches. L'ordre détermine l'année.</p>
+
+    <form id="mandatForm">
+      <ul class="years" id="yearsList"></ul>
+      <p class="counter" id="counter"></p>
+
+      <div class="slider-block">
+        <h2>Où vous situez-vous&nbsp;? <span style="font-weight:400; color:var(--ink-faint); font-size:0.85rem;">(facultatif)</span></h2>
+        <p class="sub">Uniquement pour croiser les priorités avec les sensibilités. Rien n'est affiché publiquement.</p>
+        <div class="slider-row">
+          <input type="range" id="position" min="0" max="10" step="1" value="5"
+                 aria-label="Positionnement politique, de gauche à droite">
+          <span class="slider-value" id="positionValue">Non renseigné</span>
+        </div>
+        <div class="slider-ends"><span>Gauche</span><span>Droite</span></div>
+        <button type="button" class="slider-reset" id="positionReset" hidden>Ne pas répondre finalement</button>
+      </div>
+
+      <div class="hp-field" aria-hidden="true">
+        <label for="mWebsite">Laissez ce champ vide</label>
+        <input id="mWebsite" type="text" tabindex="-1" autocomplete="off">
+      </div>
+
+      <p class="hint error" id="mandatError" hidden></p>
+      <div class="actions">
+        <button type="submit" class="btn" id="mandatSubmit">Envoyer mon quinquennat</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel thanks" id="thanksPanel" hidden>
+    <h2>C'est enregistré — merci&nbsp;!</h2>
+    <p>Voici le quinquennat que vous venez de poser&nbsp;:</p>
+    <ul class="recap" id="recap"></ul>
+    <a class="btn" href="index.html">Retour à l'accueil</a>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Quelle Galère&nbsp;! est un projet citoyen indépendant. Il n'est affilié à aucune administration, ministère ou service public réel.</p>
+    <p class="footer-links"><a href="mentions.html">Mentions légales &amp; vie privée</a> · <a href="contact.html">Nous contacter</a></p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  var SUPABASE_URL = "https://kvyfnwnrujwbxlyxuwop.supabase.co";
+  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt2eWZud25ydWp3YnhseXh1d29wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4Mzk5ODcsImV4cCI6MjEwMzQxNTk4N30.goWCeVFbEfVAQSDE3hkAt-DJhiTb9FTlYUOu6dlZTes";
+  var sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+  var MAX = 100;
+  var LS_DRAFT = "quellegalere_mandat";
+  var list = document.getElementById("yearsList");
+  var counter = document.getElementById("counter");
+  var form = document.getElementById("mandatForm");
+  var errEl = document.getElementById("mandatError");
+  var submitBtn = document.getElementById("mandatSubmit");
+  var formPanel = document.getElementById("formPanel");
+  var thanksPanel = document.getElementById("thanksPanel");
+  var recap = document.getElementById("recap");
+  var hp = document.getElementById("mWebsite");
+
+  var slider = document.getElementById("position");
+  var sliderValue = document.getElementById("positionValue");
+  var sliderReset = document.getElementById("positionReset");
+  var positionSet = false;
+
+  var PLACEHOLDERS = [
+    "Ex. : diviser par deux les délais de la préfecture",
+    "Ex. : un interlocuteur unique par dossier",
+    "Ex. : supprimer les pièces déjà détenues par l'État",
+    "Ex. : rendre chaque formulaire opposable",
+    "Ex. : publier les délais réels de chaque service"
+  ];
+
+  /* L'état, c'est juste l'ordre des textes : l'année est la position. */
+  var values = ["", "", "", "", ""];
+
+  function safeSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+  function safeGet(k){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e){ return null; } }
+  function saveDraft(){
+    safeSet(LS_DRAFT, { values: values, position: positionSet ? Number(slider.value) : null });
+  }
+
+  function updateCounter(){
+    var filled = values.filter(function(v){ return v.trim() !== ""; }).length;
+    counter.textContent = filled + " / 5 priorités — une phrase courte par année (" + MAX + " caractères max).";
+  }
+
+  function render(focusIndex){
+    list.innerHTML = "";
+    values.forEach(function(val, i){
+      var li = document.createElement("li");
+      li.className = "year";
+      li.draggable = true;
+      li.dataset.index = String(i);
+
+      var grip = document.createElement("span");
+      grip.className = "grip";
+      grip.textContent = "⠿";
+      grip.setAttribute("aria-hidden", "true");
+
+      var badge = document.createElement("span");
+      badge.className = "year-badge";
+      badge.textContent = "Année " + (i + 1);
+
+      var input = document.createElement("input");
+      input.type = "text";
+      input.maxLength = MAX;
+      input.value = val;
+      input.placeholder = PLACEHOLDERS[i];
+      input.setAttribute("aria-label", "Priorité de l'année " + (i + 1));
+      input.addEventListener("input", function(){
+        values[i] = input.value;
+        updateCounter();
+        saveDraft();
+      });
+
+      var moves = document.createElement("div");
+      moves.className = "year-moves";
+      var up = document.createElement("button");
+      up.type = "button"; up.className = "move"; up.textContent = "▲";
+      up.setAttribute("aria-label", "Monter d'une année");
+      up.disabled = i === 0;
+      up.addEventListener("click", function(){ swap(i, i - 1); });
+      var down = document.createElement("button");
+      down.type = "button"; down.className = "move"; down.textContent = "▼";
+      down.setAttribute("aria-label", "Descendre d'une année");
+      down.disabled = i === values.length - 1;
+      down.addEventListener("click", function(){ swap(i, i + 1); });
+      moves.appendChild(up); moves.appendChild(down);
+
+      li.appendChild(grip);
+      li.appendChild(badge);
+      li.appendChild(input);
+      li.appendChild(moves);
+      list.appendChild(li);
+
+      if (focusIndex === i) input.focus();
+    });
+    updateCounter();
+  }
+
+  function swap(a, b){
+    if (b < 0 || b >= values.length) return;
+    var t = values[a]; values[a] = values[b]; values[b] = t;
+    saveDraft();
+    render(b);
+  }
+
+  /* glisser-déposer : confort sur ordinateur, les flèches restent le chemin
+     fiable (le DnD HTML5 ne marche pas au doigt sur mobile) */
+  var dragFrom = null;
+  list.addEventListener("dragstart", function(e){
+    var li = e.target.closest(".year"); if (!li) return;
+    dragFrom = Number(li.dataset.index);
+    li.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move";
+    try { e.dataTransfer.setData("text/plain", String(dragFrom)); } catch(err){}
+  });
+  list.addEventListener("dragover", function(e){
+    e.preventDefault();
+    var li = e.target.closest(".year"); if (!li) return;
+    list.querySelectorAll(".year").forEach(function(n){ n.classList.remove("dragover"); });
+    li.classList.add("dragover");
+  });
+  list.addEventListener("dragleave", function(e){
+    var li = e.target.closest(".year"); if (li) li.classList.remove("dragover");
+  });
+  list.addEventListener("drop", function(e){
+    e.preventDefault();
+    var li = e.target.closest(".year"); if (!li || dragFrom === null) return;
+    var to = Number(li.dataset.index);
+    if (to !== dragFrom){
+      var moved = values.splice(dragFrom, 1)[0];
+      values.splice(to, 0, moved);
+      saveDraft();
+    }
+    dragFrom = null;
+    render();
+  });
+  list.addEventListener("dragend", function(){
+    dragFrom = null;
+    list.querySelectorAll(".year").forEach(function(n){
+      n.classList.remove("dragging"); n.classList.remove("dragover");
+    });
+  });
+
+  /* Le curseur reste « non renseigné » tant qu'on n'y touche pas : sinon une
+     position centrale serait enregistrée pour des gens qui n'ont rien dit. */
+  var LABELS = ["Très à gauche","Très à gauche","À gauche","À gauche","Centre gauche","Centre","Centre droit","À droite","À droite","Très à droite","Très à droite"];
+  function paintSlider(){
+    if (!positionSet){
+      sliderValue.textContent = "Non renseigné";
+      sliderReset.hidden = true;
+    } else {
+      sliderValue.textContent = LABELS[Number(slider.value)];
+      sliderReset.hidden = false;
+    }
+  }
+  slider.addEventListener("input", function(){
+    positionSet = true;
+    paintSlider();
+    saveDraft();
+  });
+  sliderReset.addEventListener("click", function(){
+    positionSet = false;
+    slider.value = 5;
+    paintSlider();
+    saveDraft();
+  });
+
+  form.addEventListener("submit", async function(e){
+    e.preventDefault();
+    errEl.hidden = true;
+    if (hp.value.trim() !== ""){ return; }
+
+    var cleaned = values.map(function(v){ return v.trim(); });
+    var missing = cleaned.findIndex(function(v){ return v === ""; });
+    if (missing !== -1){
+      errEl.textContent = "Il manque la priorité de l'année " + (missing + 1) + " — les cinq sont nécessaires, c'est tout l'exercice.";
+      errEl.hidden = false;
+      return;
+    }
+    if (!sb){
+      errEl.textContent = "Envoi indisponible pour le moment.";
+      errEl.hidden = false;
+      return;
+    }
+
+    submitBtn.disabled = true;
+    try{
+      var res = await sb.from("mandats").insert({
+        p1: cleaned[0], p2: cleaned[1], p3: cleaned[2], p4: cleaned[3], p5: cleaned[4],
+        position_politique: positionSet ? Number(slider.value) : null
+      });
+      if (res.error) throw res.error;
+      try{ localStorage.removeItem(LS_DRAFT); } catch(e2){}
+      recap.innerHTML = "";
+      cleaned.forEach(function(v, i){
+        var li = document.createElement("li");
+        var y = document.createElement("span");
+        y.className = "y"; y.textContent = "Année " + (i + 1);
+        var t = document.createElement("span"); t.textContent = v;
+        li.appendChild(y); li.appendChild(t);
+        recap.appendChild(li);
+      });
+      formPanel.hidden = true;
+      thanksPanel.hidden = false;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch(err){
+      console.error("Quelle Galère — échec de l'envoi du mandat :", err);
+      errEl.textContent = "L'envoi a échoué. Réessayez dans un instant.";
+      errEl.hidden = false;
+    }
+    submitBtn.disabled = false;
+  });
+
+  /* brouillon : on ne perd pas cinq phrases réfléchies sur un rechargement */
+  var draft = safeGet(LS_DRAFT);
+  if (draft && Array.isArray(draft.values) && draft.values.length === 5){
+    values = draft.values.map(function(v){ return typeof v === "string" ? v : ""; });
+    if (typeof draft.position === "number"){
+      slider.value = String(draft.position);
+      positionSet = true;
+    }
+  }
+  render();
+  paintSlider();
+})();
+</script>

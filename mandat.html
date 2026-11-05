@@ -60,7 +60,7 @@
     font-weight:700; font-size:0.92rem;
     border:1px solid var(--blue); background:var(--blue); color:#FFFFFF;
     padding:10px 16px; border-radius:2px; cursor:pointer; white-space:nowrap;
-    text-decoration:none; font-family:inherit;
+    text-decoration:none; font-family:inherit; display:inline-block;
   }
   .btn:hover{background:var(--blue-hover); border-color:var(--blue-hover);}
   .btn[disabled]{opacity:0.6; cursor:default;}
@@ -143,6 +143,32 @@
   .hp-field{position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden;}
 
   /* ---- merci ---- */
+  /* compteur d'encouragement : discret, mais la première chose qu'on lit
+     avant de se décider à remplir */
+  .tally{
+    margin:0 0 26px;
+    font-size:0.9rem; font-weight:700;
+    color:var(--blue);
+  }
+  .tally .n{font-size:1.15rem;}
+
+  /* ---- à venir ---- */
+  .soon{
+    margin-top:22px;
+    border:1px dashed var(--line-strong);
+    border-radius:2px;
+    padding:20px 22px;
+    background:transparent;
+  }
+  .soon-tag{
+    display:inline-block; margin-bottom:8px;
+    font-size:0.68rem; letter-spacing:0.08em; text-transform:uppercase; font-weight:700;
+    color:var(--ink-faint);
+  }
+  .soon h2{font-size:1.05rem; font-weight:700; margin-bottom:8px;}
+  .soon p{color:var(--ink-faint); font-size:0.9rem; margin:0 0 8px; max-width:62ch;}
+  .soon p:last-child{margin-bottom:0;}
+
   .thanks{text-align:center; padding:14px 0 6px;}
   .thanks h2{font-size:1.3rem; margin-bottom:10px;}
   .thanks p{color:var(--ink-soft); margin:0 auto 18px; max-width:46ch;}
@@ -152,6 +178,8 @@
     background:var(--blue-soft); border-radius:2px; font-size:0.9rem;
   }
   .recap .y{flex:none; font-weight:700; color:var(--blue); width:64px;}
+  .rank{font-weight:700; color:var(--blue) !important;}
+  .thanks-actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
 
   footer{padding:22px 4px 40px;}
   footer p{font-size:0.78rem; color:var(--ink-faint); max-width:60ch; margin:0;}
@@ -182,6 +210,8 @@
   <span class="eyebrow">Moi Président·e</span>
   <h1>Cinq ans, cinq priorités</h1>
   <p class="lede">Mettez une phrase courte par année. L'objectif est de rester simple, pas de faire un grand discours politique&nbsp;!</p>
+
+  <p class="tally" id="tally" hidden></p>
 
   <div class="panel" id="formPanel">
     <h2>Vos cinq priorités</h2>
@@ -219,8 +249,19 @@
     <h2>C'est enregistré — merci&nbsp;!</h2>
     <p>Voici le quinquennat que vous venez de poser&nbsp;:</p>
     <ul class="recap" id="recap"></ul>
-    <a class="btn" href="index.html">Retour à l'accueil</a>
+    <p class="rank" id="rank" hidden></p>
+    <div class="thanks-actions">
+      <a class="btn ghost" href="index.html">Retour à l'accueil</a>
+      <a class="btn" href="galeres.html">Voir les galères</a>
+    </div>
   </div>
+
+  <section class="soon">
+    <span class="soon-tag">Bientôt</span>
+    <h2>Ce que l'ensemble donnera</h2>
+    <p>Un quinquennat seul ne dit pas grand-chose&nbsp;; mille, si. Quand il y en aura assez, cette page montrera ce qui ressort de l'ensemble&nbsp;: les priorités qui reviennent le plus, l'année où chacune est le plus souvent placée, et ce qui change — ou pas — selon les sensibilités politiques.</p>
+    <p>Rien d'individuel ne sera jamais publié. Seulement des totaux.</p>
+  </section>
 </main>
 
 <footer>
@@ -249,6 +290,8 @@
   var thanksPanel = document.getElementById("thanksPanel");
   var recap = document.getElementById("recap");
   var hp = document.getElementById("mWebsite");
+  var tally = document.getElementById("tally");
+  var rank = document.getElementById("rank");
 
   var slider = document.getElementById("position");
   var sliderValue = document.getElementById("positionValue");
@@ -270,6 +313,38 @@
   function safeGet(k){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e){ return null; } }
   function saveDraft(){
     safeSet(LS_DRAFT, { values: values, position: positionSet ? Number(slider.value) : null });
+  }
+
+  /* La table mandats n'a aucune policy SELECT — son contenu n'est pas public.
+     Le total passe donc par mandats_count(), une fonction SECURITY DEFINER
+     qui ne renvoie que le nombre de lignes, jamais les lignes. */
+  async function fetchTotal(){
+    if (!sb) return null;
+    try{
+      var res = await sb.rpc("mandats_count");
+      if (res.error) throw res.error;
+      var n = Number(res.data);
+      return isFinite(n) ? n : null;
+    } catch(e){
+      console.error("Quelle Galère — compteur indisponible :", e);
+      return null;  /* on préfère ne rien afficher qu'afficher un faux zéro */
+    }
+  }
+
+  function renderTally(n){
+    if (n === null) return;
+    if (n === 0){
+      tally.textContent = "Personne n'a encore posé son quinquennat — à vous l'honneur.";
+    } else {
+      var mot = n === 1 ? " quinquennat déjà posé." : " quinquennats déjà posés.";
+      tally.textContent = "";
+      var strong = document.createElement("span");
+      strong.className = "n";
+      strong.textContent = n.toLocaleString("fr-FR");
+      tally.appendChild(strong);
+      tally.appendChild(document.createTextNode(mot + " Ajoutez le vôtre."));
+    }
+    tally.hidden = false;
   }
 
   function updateCounter(){
@@ -437,7 +512,15 @@
       });
       formPanel.hidden = true;
       thanksPanel.hidden = false;
+      tally.hidden = true;        /* remplacé par le rang, juste en dessous */
       window.scrollTo({ top: 0, behavior: "smooth" });
+      var total = await fetchTotal();
+      if (total !== null){
+        rank.textContent = total <= 1
+          ? "C'est le tout premier quinquennat posé ici."
+          : "C'est le " + total.toLocaleString("fr-FR") + "ᵉ quinquennat posé ici.";
+        rank.hidden = false;
+      }
     } catch(err){
       console.error("Quelle Galère — échec de l'envoi du mandat :", err);
       errEl.textContent = "L'envoi a échoué. Réessayez dans un instant.";
@@ -457,5 +540,6 @@
   }
   render();
   paintSlider();
+  fetchTotal().then(renderTally);
 })();
 </script>

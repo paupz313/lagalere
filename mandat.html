@@ -256,6 +256,16 @@
     </div>
   </div>
 
+  <div class="panel thanks" id="alreadyPanel" hidden>
+    <h2>Vous avez déjà posé votre quinquennat</h2>
+    <p id="alreadyWhen"></p>
+    <ul class="recap" id="alreadyRecap"></ul>
+    <div class="thanks-actions">
+      <button type="button" class="btn ghost" id="againBtn">En envoyer un autre</button>
+      <a class="btn" href="galeres.html">Voir les galères</a>
+    </div>
+  </div>
+
   <section class="soon">
     <span class="soon-tag">Bientôt</span>
     <h2>Ce que l'ensemble donnera</h2>
@@ -281,6 +291,10 @@
 
   var MAX = 100;
   var LS_DRAFT = "quellegalere_mandat";
+  /* Trace locale de l'envoi. Rien côté serveur ne relie un quinquennat à
+     quelqu'un — c'est donc volontairement un garde-fou, pas un verrou :
+     il dissuade l'envoi en double sans jamais bloquer qui veut recommencer. */
+  var LS_DONE = "quellegalere_mandat_envoye";
   var list = document.getElementById("yearsList");
   var counter = document.getElementById("counter");
   var form = document.getElementById("mandatForm");
@@ -292,6 +306,10 @@
   var hp = document.getElementById("mWebsite");
   var tally = document.getElementById("tally");
   var rank = document.getElementById("rank");
+  var alreadyPanel = document.getElementById("alreadyPanel");
+  var alreadyWhen = document.getElementById("alreadyWhen");
+  var alreadyRecap = document.getElementById("alreadyRecap");
+  var againBtn = document.getElementById("againBtn");
 
   var slider = document.getElementById("position");
   var sliderValue = document.getElementById("positionValue");
@@ -336,15 +354,28 @@
     if (n === 0){
       tally.textContent = "Personne n'a encore posé son quinquennat — à vous l'honneur.";
     } else {
-      var mot = n === 1 ? " quinquennat déjà posé." : " quinquennats déjà posés.";
+      var mot = n === 1 ? " quinquennat posé" : " quinquennats posés";
+      var suite = safeGet(LS_DONE) ? " jusqu'ici, dont le vôtre." : " jusqu'ici. Ajoutez le vôtre.";
       tally.textContent = "";
       var strong = document.createElement("span");
       strong.className = "n";
       strong.textContent = n.toLocaleString("fr-FR");
       tally.appendChild(strong);
-      tally.appendChild(document.createTextNode(mot + " Ajoutez le vôtre."));
+      tally.appendChild(document.createTextNode(mot + suite));
     }
     tally.hidden = false;
+  }
+
+  function renderRecap(ul, arr){
+    ul.innerHTML = "";
+    arr.forEach(function(v, i){
+      var li = document.createElement("li");
+      var y = document.createElement("span");
+      y.className = "y"; y.textContent = "Année " + (i + 1);
+      var t = document.createElement("span"); t.textContent = v;
+      li.appendChild(y); li.appendChild(t);
+      ul.appendChild(li);
+    });
   }
 
   function updateCounter(){
@@ -501,15 +532,8 @@
       });
       if (res.error) throw res.error;
       try{ localStorage.removeItem(LS_DRAFT); } catch(e2){}
-      recap.innerHTML = "";
-      cleaned.forEach(function(v, i){
-        var li = document.createElement("li");
-        var y = document.createElement("span");
-        y.className = "y"; y.textContent = "Année " + (i + 1);
-        var t = document.createElement("span"); t.textContent = v;
-        li.appendChild(y); li.appendChild(t);
-        recap.appendChild(li);
-      });
+      safeSet(LS_DONE, { at: new Date().toISOString(), values: cleaned });
+      renderRecap(recap, cleaned);
       formPanel.hidden = true;
       thanksPanel.hidden = false;
       tally.hidden = true;        /* remplacé par le rang, juste en dessous */
@@ -540,6 +564,30 @@
   }
   render();
   paintSlider();
+
+  /* Déjà envoyé depuis ce navigateur, et aucun nouveau brouillon en cours :
+     on montre ce qui a été posé plutôt qu'un formulaire vide. */
+  var done = safeGet(LS_DONE);
+  var hasDraft = values.some(function(v){ return v.trim() !== ""; });
+  if (done && Array.isArray(done.values) && done.values.length === 5 && !hasDraft){
+    renderRecap(alreadyRecap, done.values);
+    var quand = "";
+    var d = new Date(done.at);
+    if (done.at && !isNaN(d.getTime())){
+      quand = " le " + d.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+    }
+    alreadyWhen.textContent = "Voici celui que vous avez envoyé" + quand + ".";
+    formPanel.hidden = true;
+    alreadyPanel.hidden = false;
+  }
+
+  againBtn.addEventListener("click", function(){
+    alreadyPanel.hidden = true;
+    formPanel.hidden = false;
+    var first = list.querySelector("input");
+    if (first) first.focus();
+  });
+
   fetchTotal().then(renderTally);
 })();
 </script>

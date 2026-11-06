@@ -82,6 +82,12 @@
   }
   .panel h2{font-size:1.1rem; font-weight:700; margin-bottom:4px;}
   .panel .sub{color:var(--ink-faint); font-size:0.85rem; margin:0 0 18px;}
+  .panel .sub.verb-rule{
+    color:var(--ink-soft);
+    border-left:3px solid var(--blue);
+    padding-left:10px;
+    margin-top:-10px;
+  }
 
   /* ---- les cinq années ---- */
   .years{list-style:none; margin:0; padding:0;}
@@ -94,6 +100,10 @@
     margin-bottom:10px;
   }
   .year.dragging{opacity:0.45;}
+  /* une priorité qui ne commence pas par un verbe : signalée à la sortie du
+     champ, jamais pendant la frappe */
+  .year.bad{border-color:var(--stamp);}
+  .year.bad .year-badge{color:var(--stamp);}
   .year.dragover{border-color:var(--blue); border-style:dashed;}
   .year-badge{
     flex:none; width:74px;
@@ -216,6 +226,7 @@
   <div class="panel" id="formPanel">
     <h2>Vos cinq priorités</h2>
     <p class="sub">Faites glisser les lignes pour les réordonner.</p>
+    <p class="sub verb-rule">Chaque priorité commence par un verbe à l'infinitif&nbsp;: «&nbsp;réduire…&nbsp;», «&nbsp;construire…&nbsp;», «&nbsp;garantir…&nbsp;» — pas «&nbsp;je veux&nbsp;» ni «&nbsp;plus de&nbsp;».</p>
 
     <form id="mandatForm">
       <ul class="years" id="yearsList"></ul>
@@ -366,6 +377,63 @@
     tally.hidden = false;
   }
 
+  /* ---- « chaque priorité commence par un verbe » ----
+     Pas de dictionnaire embarqué : en français, tout infinitif se termine
+     par -er, -ir ou -re (-oir finit par -ir), et le plus court fait quatre
+     lettres. On teste donc la terminaison du premier mot, après avoir sauté
+     un éventuel « se » / « ne » / « plus » / « jamais », et on écarte à la
+     main les mots courants qui tomberaient dans le filet.
+     C'est un garde-fou volontairement simple : il doit arrêter « je veux »
+     et « plus de », pas rendre un verdict de grammaire. */
+  var SKIP_WORDS = { se: 1, ne: 1, plus: 1, jamais: 1 };
+  var NOT_VERBS = {};
+  ("air clair chair pair impair hier hiver fier cher leger premier dernier entier " +
+   "metier papier dossier quartier loyer foyer janvier fevrier danger cancer enfer " +
+   "super leader plaisir desir loisir elixir souvenir avenir " +
+   "guerre terre pere mere frere misere colere matiere lumiere carriere maniere " +
+   "barriere frontiere filiere premiere derniere riviere priere galere " +
+   "autre notre votre entre contre encore malgre chiffre offre oeuvre " +
+   "chambre nombre ordre livre arbre cadre centre ministre membre titre lettre " +
+   "fenetre maitre pauvre libre propre sobre ombre poudre foudre fibre cuivre " +
+   "septembre octobre novembre decembre"
+  ).split(" ").forEach(function(w){ NOT_VERBS[w] = 1; });
+
+  function deaccent(w){
+    return w.normalize ? w.normalize("NFD").replace(/[̀-ͯ]/g, "") : w;
+  }
+
+  function startsWithVerb(text){
+    /* on enlève la ponctuation d'ouverture puis on découpe sur les blancs */
+    var words = text.toLowerCase()
+      .replace(/^[\s"'‘’«–—\-(.:,!?]+/, "")
+      .split(/\s+/);
+    for (var i = 0; i < words.length && i < 3; i++){
+      /* « s'attaquer » reste un seul mot : on ne coupe pas sur l'apostrophe,
+         seulement sur la ponctuation de fin */
+      var w = words[i].replace(/[.,;:!?)"'’»]+$/, "");
+      if (!w) continue;
+      var plain = deaccent(w);
+      if (SKIP_WORDS[plain]) continue;         /* « se lancer », « ne plus payer » */
+      if (plain.length < 4) return false;      /* le plus court infinitif fait 4 lettres */
+      if (NOT_VERBS[plain]) return false;
+      return /(er|ir|re)$/.test(plain);
+    }
+    return false;
+  }
+
+  function badYears(arr){
+    var bad = [];
+    arr.forEach(function(v, i){
+      if (v !== "" && !startsWithVerb(v)) bad.push(i + 1);
+    });
+    return bad;
+  }
+
+  function markRow(i, isBad){
+    var li = list.querySelector('.year[data-index="' + i + '"]');
+    if (li) li.classList.toggle("bad", isBad);
+  }
+
   function renderRecap(ul, arr){
     ul.innerHTML = "";
     arr.forEach(function(v, i){
@@ -408,8 +476,14 @@
       input.setAttribute("aria-label", "Priorité de l'année " + (i + 1));
       input.addEventListener("input", function(){
         values[i] = input.value;
+        markRow(i, false);   /* on ne signale rien pendant la frappe */
         updateCounter();
         saveDraft();
+      });
+      /* au départ du champ seulement : sinon « réd… » serait fautif en cours de mot */
+      input.addEventListener("blur", function(){
+        var v = input.value.trim();
+        markRow(i, v !== "" && !startsWithVerb(v));
       });
 
       var moves = document.createElement("div");
@@ -515,6 +589,16 @@
     var missing = cleaned.findIndex(function(v){ return v === ""; });
     if (missing !== -1){
       errEl.textContent = "Il manque la priorité de l'année " + (missing + 1) + " — les cinq sont nécessaires, c'est tout l'exercice.";
+      errEl.hidden = false;
+      return;
+    }
+    var bad = badYears(cleaned);
+    if (bad.length){
+      cleaned.forEach(function(v, i){ markRow(i, bad.indexOf(i + 1) !== -1); });
+      errEl.textContent = (bad.length === 1
+          ? "La priorité de l'année " + bad[0] + " ne commence pas par un verbe."
+          : "Les priorités des années " + bad.slice(0, -1).join(", ") + " et " + bad[bad.length - 1] + " ne commencent pas par un verbe.")
+        + " Commencez par une action à l'infinitif : « réduire… », « construire… », « garantir… ».";
       errEl.hidden = false;
       return;
     }

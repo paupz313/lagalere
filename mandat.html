@@ -162,6 +162,49 @@
   }
   .tally .n{font-size:1.15rem;}
 
+  /* ---- étape 2 : ampleur et preuve ---- */
+  .step{
+    display:block; margin-bottom:6px;
+    font-size:0.68rem; letter-spacing:0.08em; text-transform:uppercase; font-weight:700;
+    color:var(--blue);
+  }
+  .panel .sub.legend{
+    border-left:3px solid var(--line-strong);
+    padding-left:10px; margin-top:-10px;
+    color:var(--ink-faint);
+  }
+  .details{list-style:none; margin:0; padding:0;}
+  .detail{
+    border:1px solid var(--line); border-radius:2px;
+    padding:12px 14px; margin-bottom:12px;
+    background:var(--paper-raised);
+  }
+  .detail-head{margin:0 0 10px; display:flex; gap:10px; align-items:baseline; flex-wrap:wrap;}
+  .detail-head .y{
+    flex:none; font-size:0.7rem; font-weight:700; letter-spacing:0.05em;
+    text-transform:uppercase; color:var(--blue);
+  }
+  .detail-head .detail-text{font-weight:700; color:var(--ink); min-width:0;}
+  .amp-row{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;}
+  .amp{
+    font-family:inherit; font-size:0.78rem; font-weight:700;
+    color:var(--ink-soft); background:var(--paper);
+    border:1px solid var(--line-strong); border-radius:2px;
+    padding:6px 10px; cursor:pointer;
+  }
+  .amp:hover{border-color:var(--blue); color:var(--blue);}
+  .amp[aria-pressed="true"]{background:var(--blue); border-color:var(--blue); color:#FFFFFF;}
+  .amp.na{font-weight:400; color:var(--ink-faint);}
+  .amp.na[aria-pressed="true"]{background:var(--ink-faint); border-color:var(--ink-faint); color:var(--paper);}
+  .proof{
+    width:100%; font-family:inherit; font-size:0.9rem;
+    color:var(--ink); background:var(--paper);
+    border:1px solid var(--line); border-radius:2px;
+    padding:8px 10px;
+  }
+  .proof:focus{outline:2px solid var(--focus); outline-offset:1px;}
+  .detail-actions{display:flex; gap:10px; justify-content:space-between; flex-wrap:wrap;}
+
   /* ---- à venir ---- */
   .soon{
     margin-top:22px;
@@ -251,9 +294,24 @@
 
       <p class="hint error" id="mandatError" hidden></p>
       <div class="actions">
-        <button type="submit" class="btn" id="mandatSubmit">Envoyer mon quinquennat</button>
+        <button type="submit" class="btn" id="mandatSubmit">Continuer <span aria-hidden="true">→</span></button>
       </div>
     </form>
+  </div>
+
+  <div class="panel" id="detailPanel" hidden>
+    <span class="step">Étape 2 sur 2 — facultative</span>
+    <h2>Jusqu'où, et à quoi on le verra&nbsp;?</h2>
+    <p class="sub">Un clic par priorité, et une ligne si vous voulez. Rien n'est obligatoire&nbsp;: vous pouvez envoyer tel quel.</p>
+    <p class="sub legend">À la marge ≈&nbsp;10&nbsp;% · Nettement ≈&nbsp;20&nbsp;% · De moitié ≈&nbsp;50&nbsp;% · Du tout au tout ≈&nbsp;×2 · Totalement&nbsp;= à zéro, ou pour tout le monde.</p>
+
+    <ul class="details" id="detailsList"></ul>
+
+    <div class="actions detail-actions">
+      <button type="button" class="btn ghost" id="backToForm">← Revenir aux priorités</button>
+      <button type="button" class="btn" id="finalSubmit">Envoyer mon quinquennat</button>
+    </div>
+    <p class="hint error" id="detailError" hidden></p>
   </div>
 
   <div class="panel thanks" id="thanksPanel" hidden>
@@ -317,6 +375,11 @@
   var hp = document.getElementById("mWebsite");
   var tally = document.getElementById("tally");
   var rank = document.getElementById("rank");
+  var detailPanel = document.getElementById("detailPanel");
+  var detailsList = document.getElementById("detailsList");
+  var detailError = document.getElementById("detailError");
+  var backToForm = document.getElementById("backToForm");
+  var finalSubmit = document.getElementById("finalSubmit");
   var alreadyPanel = document.getElementById("alreadyPanel");
   var alreadyWhen = document.getElementById("alreadyWhen");
   var alreadyRecap = document.getElementById("alreadyRecap");
@@ -337,11 +400,29 @@
 
   /* L'état, c'est juste l'ordre des textes : l'année est la position. */
   var values = ["", "", "", "", ""];
+  /* Étape 2, facultative. L'ampleur est volontairement relative — jamais un
+     chiffre brut, qui ne voudrait rien dire d'un sujet à l'autre.
+     0 = pas quantifiable, 1 à 5 = l'échelle, null = pas répondu. */
+  var AMPLEURS = [
+    { v: 1, label: "À la marge" },
+    { v: 2, label: "Nettement" },
+    { v: 3, label: "De moitié" },
+    { v: 4, label: "Du tout au tout" },
+    { v: 5, label: "Totalement" }
+  ];
+  var PROOF_MAX = 120;
+  var amps = [null, null, null, null, null];
+  var proofs = ["", "", "", "", ""];
 
   function safeSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
   function safeGet(k){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e){ return null; } }
   function saveDraft(){
-    safeSet(LS_DRAFT, { values: values, position: positionSet ? Number(slider.value) : null });
+    safeSet(LS_DRAFT, {
+      values: values,
+      position: positionSet ? Number(slider.value) : null,
+      amps: amps,
+      proofs: proofs
+    });
   }
 
   /* La table mandats n'a aucune policy SELECT — son contenu n'est pas public.
@@ -432,6 +513,61 @@
   function markRow(i, isBad){
     var li = list.querySelector('.year[data-index="' + i + '"]');
     if (li) li.classList.toggle("bad", isBad);
+  }
+
+  function renderDetails(){
+    detailsList.innerHTML = "";
+    values.forEach(function(val, i){
+      var li = document.createElement("li");
+      li.className = "detail";
+
+      var head = document.createElement("p");
+      head.className = "detail-head";
+      var y = document.createElement("span");
+      y.className = "y"; y.textContent = "Année " + (i + 1);
+      var txt = document.createElement("span");
+      txt.className = "detail-text"; txt.textContent = val.trim();
+      head.appendChild(y); head.appendChild(txt);
+
+      var row = document.createElement("div");
+      row.className = "amp-row";
+      row.setAttribute("role", "group");
+      row.setAttribute("aria-label", "Ampleur pour l'année " + (i + 1));
+
+      function chip(v, label, extra){
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "amp" + (extra || "");
+        b.textContent = label;
+        b.setAttribute("aria-pressed", String(amps[i] === v));
+        b.addEventListener("click", function(){
+          /* un second clic retire le choix : rien n'est obligatoire ici */
+          amps[i] = (amps[i] === v) ? null : v;
+          saveDraft();
+          renderDetails();
+        });
+        return b;
+      }
+      AMPLEURS.forEach(function(a){ row.appendChild(chip(a.v, a.label)); });
+      row.appendChild(chip(0, "Pas quantifiable", " na"));
+
+      var proof = document.createElement("input");
+      proof.type = "text";
+      proof.className = "proof";
+      proof.maxLength = PROOF_MAX;
+      proof.value = proofs[i];
+      proof.placeholder = "À quoi on verra que c'est fait ? (facultatif)";
+      proof.setAttribute("aria-label", "Preuve pour l'année " + (i + 1));
+      proof.addEventListener("input", function(){
+        proofs[i] = proof.value;
+        saveDraft();
+      });
+
+      li.appendChild(head);
+      li.appendChild(row);
+      li.appendChild(proof);
+      detailsList.appendChild(li);
+    });
   }
 
   function renderRecap(ul, arr){
@@ -580,7 +716,7 @@
     saveDraft();
   });
 
-  form.addEventListener("submit", async function(e){
+  form.addEventListener("submit", function(e){
     e.preventDefault();
     errEl.hidden = true;
     if (hp.value.trim() !== ""){ return; }
@@ -602,23 +738,47 @@
       errEl.hidden = false;
       return;
     }
+
+    /* les cinq phrases tiennent : on passe à l'étape facultative */
+    renderDetails();
+    formPanel.hidden = true;
+    detailPanel.hidden = false;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  backToForm.addEventListener("click", function(){
+    detailPanel.hidden = true;
+    formPanel.hidden = false;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  finalSubmit.addEventListener("click", async function(){
+    detailError.hidden = true;
     if (!sb){
-      errEl.textContent = "Envoi indisponible pour le moment.";
-      errEl.hidden = false;
+      detailError.textContent = "Envoi indisponible pour le moment.";
+      detailError.hidden = false;
       return;
     }
+    var cleaned = values.map(function(v){ return v.trim(); });
+    var cleanProofs = proofs.map(function(v){
+      var t = v.trim();
+      return t === "" ? null : t.slice(0, PROOF_MAX);
+    });
 
-    submitBtn.disabled = true;
+    finalSubmit.disabled = true;
     try{
       var res = await sb.from("mandats").insert({
         p1: cleaned[0], p2: cleaned[1], p3: cleaned[2], p4: cleaned[3], p5: cleaned[4],
+        a1: amps[0], a2: amps[1], a3: amps[2], a4: amps[3], a5: amps[4],
+        pr1: cleanProofs[0], pr2: cleanProofs[1], pr3: cleanProofs[2],
+        pr4: cleanProofs[3], pr5: cleanProofs[4],
         position_politique: positionSet ? Number(slider.value) : null
       });
       if (res.error) throw res.error;
       try{ localStorage.removeItem(LS_DRAFT); } catch(e2){}
       safeSet(LS_DONE, { at: new Date().toISOString(), values: cleaned });
       renderRecap(recap, cleaned);
-      formPanel.hidden = true;
+      detailPanel.hidden = true;
       thanksPanel.hidden = false;
       tally.hidden = true;        /* remplacé par le rang, juste en dessous */
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -631,10 +791,10 @@
       }
     } catch(err){
       console.error("Quelle Galère — échec de l'envoi du mandat :", err);
-      errEl.textContent = "L'envoi a échoué. Réessayez dans un instant.";
-      errEl.hidden = false;
+      detailError.textContent = "L'envoi a échoué. Réessayez dans un instant.";
+      detailError.hidden = false;
     }
-    submitBtn.disabled = false;
+    finalSubmit.disabled = false;
   });
 
   /* brouillon : on ne perd pas cinq phrases réfléchies sur un rechargement */
@@ -644,6 +804,12 @@
     if (typeof draft.position === "number"){
       slider.value = String(draft.position);
       positionSet = true;
+    }
+    if (Array.isArray(draft.amps) && draft.amps.length === 5){
+      amps = draft.amps.map(function(v){ return typeof v === "number" ? v : null; });
+    }
+    if (Array.isArray(draft.proofs) && draft.proofs.length === 5){
+      proofs = draft.proofs.map(function(v){ return typeof v === "string" ? v : ""; });
     }
   }
   render();

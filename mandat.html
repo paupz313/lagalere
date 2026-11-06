@@ -425,6 +425,32 @@
     });
   }
 
+  /* ---- mesure d'entonnoir ----
+     On veut savoir où les gens abandonnent, pas qui ils sont. L'identifiant
+     de visite est tiré au hasard et vit dans cette variable : ni cookie, ni
+     localStorage, ni sessionStorage, donc rien ne survit à la fermeture de
+     l'onglet et un rechargement compte pour une nouvelle visite.
+     L'appel part sans qu'on l'attende et avale ses erreurs : la mesure ne
+     doit jamais ralentir ni casser la page. */
+  var visitId = (function(){
+    try{
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    } catch(e){}
+    return String(Date.now()) + "-" + Math.random().toString(36).slice(2, 10);
+  })();
+  var tracked = {};
+
+  function track(name, once){
+    if (once){
+      if (tracked[name]) return;
+      tracked[name] = true;
+    }
+    if (!sb) return;
+    try{
+      sb.from("events").insert({ name: name, visit: visitId }).then(function(){}, function(){});
+    } catch(e){}
+  }
+
   /* La table mandats n'a aucune policy SELECT — son contenu n'est pas public.
      Le total passe donc par mandats_count(), une fonction SECURITY DEFINER
      qui ne renvoie que le nombre de lignes, jamais les lignes. */
@@ -615,6 +641,8 @@
         markRow(i, false);   /* on ne signale rien pendant la frappe */
         updateCounter();
         saveDraft();
+        if (input.value.trim() !== "") track("mandat_start", true);
+        if (values.every(function(v){ return v.trim() !== ""; })) track("mandat_complete", true);
       });
       /* au départ du champ seulement : sinon « réd… » serait fautif en cours de mot */
       input.addEventListener("blur", function(){
@@ -726,6 +754,7 @@
     if (missing !== -1){
       errEl.textContent = "Il manque la priorité de l'année " + (missing + 1) + " — les cinq sont nécessaires, c'est tout l'exercice.";
       errEl.hidden = false;
+      track("mandat_missing", true);
       return;
     }
     var bad = badYears(cleaned);
@@ -736,6 +765,7 @@
           : "Les priorités des années " + bad.slice(0, -1).join(", ") + " et " + bad[bad.length - 1] + " ne commencent pas par un verbe.")
         + " Commencez par une action à l'infinitif : « réduire… », « construire… », « garantir… ».";
       errEl.hidden = false;
+      track("mandat_verb_blocked");   /* à chaque fois : c'est le signal à surveiller */
       return;
     }
 
@@ -743,12 +773,14 @@
     renderDetails();
     formPanel.hidden = true;
     detailPanel.hidden = false;
+    track("mandat_step2", true);
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
   backToForm.addEventListener("click", function(){
     detailPanel.hidden = true;
     formPanel.hidden = false;
+    track("mandat_back");
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
@@ -777,6 +809,7 @@
       if (res.error) throw res.error;
       try{ localStorage.removeItem(LS_DRAFT); } catch(e2){}
       safeSet(LS_DONE, { at: new Date().toISOString(), values: cleaned });
+      track("mandat_sent", true);
       renderRecap(recap, cleaned);
       detailPanel.hidden = true;
       thanksPanel.hidden = false;
@@ -829,7 +862,9 @@
     alreadyWhen.textContent = "Voici celui que vous avez envoyé" + quand + ".";
     formPanel.hidden = true;
     alreadyPanel.hidden = false;
+    track("mandat_already", true);
   }
+  track("mandat_view", true);
 
   againBtn.addEventListener("click", function(){
     alreadyPanel.hidden = true;
